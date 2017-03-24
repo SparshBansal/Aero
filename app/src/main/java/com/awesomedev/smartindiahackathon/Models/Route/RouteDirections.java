@@ -9,7 +9,7 @@ import java.util.List;
 public class RouteDirections {
     String status;
     List<Routes> routes;
-    OverviewPolyline overviewPolyline;
+
 
     public String getStatus() {
         return status;

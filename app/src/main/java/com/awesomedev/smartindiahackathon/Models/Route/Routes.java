@@ -9,6 +9,11 @@ import java.util.List;
 public class Routes {
     String summary;
     List<Legs> legs;
+    OverviewPolyline overview_polyline;
+
+    public OverviewPolyline getOverviewPolyline() {
+        return overview_polyline;
+    }
 
     public String getSummary() {
         return summary;
@@ -20,6 +25,10 @@ public class Routes {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public void setOverviewPolyline(OverviewPolyline overviewPolyline) {
+        this.overview_polyline = overviewPolyline;
     }
 
     public void setLegs(List<Legs> legs) {
