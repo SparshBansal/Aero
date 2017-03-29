@@ -9,10 +9,10 @@
     tools:context="com.awesomedev.smartindiahackathon.Fragments.DetailsActivityFragment">
 
     <ScrollView
-        android:layout_width="match_parent"
         android:id="@+id/sv_content_view"
-        android:padding="8dp"
-        android:layout_height="match_parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="8dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -35,7 +35,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="#2196F3"
-                        android:padding="16dp">
+                        android:paddingBottom="8dp"
+                        android:paddingLeft="16dp"
+                        android:paddingTop="8dp">
 
                         <TextView
                             android:id="@+id/tv_airport"
@@ -43,7 +45,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif"
                             android:text="IGI Airport"
-                            android:textSize="36sp" />
+                            android:textSize="24sp" />
 
 
                         <TextView
@@ -52,7 +54,7 @@
                             android:layout_height="wrap_content"
                             android:layout_below="@id/tv_airport"
                             android:text="F3200"
-                            android:textSize="18sp" />
+                            android:textSize="16sp" />
                     </RelativeLayout>
 
                     <RelativeLayout
@@ -99,12 +101,13 @@
                                     android:id="@+id/tv_depart_code_view"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
                                     android:text="IND"
-                                    android:textSize="30sp" />
+                                    android:textSize="20sp" />
 
                                 <LinearLayout
                                     android:layout_width="0dp"
-                                    android:layout_height="match_parent"
+                                    android:layout_height="wrap_content"
                                     android:layout_marginLeft="16dp"
                                     android:layout_marginTop="4dp"
                                     android:layout_weight="1"
@@ -169,12 +172,13 @@
                                     android:id="@+id/tv_arrive_code_view"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
                                     android:text="TPE"
-                                    android:textSize="30sp" />
+                                    android:textSize="20sp" />
 
                                 <LinearLayout
                                     android:layout_width="0dp"
-                                    android:layout_height="match_parent"
+                                    android:layout_height="wrap_content"
                                     android:layout_marginLeft="16dp"
                                     android:layout_marginTop="4dp"
                                     android:layout_weight="1"
@@ -200,34 +204,15 @@
                         </LinearLayout>
                     </RelativeLayout>
 
-                    <RelativeLayout
-                        android:id="@+id/rl_cv_action_view"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="right">
-
-                        <Button
-                            android:id="@+id/b_estimate_time"
-                            style="@style/Widget.AppCompat.Button.Borderless"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Estimate Time" />
-                    </RelativeLayout>
                 </LinearLayout>
 
             </android.support.v7.widget.CardView>
 
             <!-- Google Map view  -->
-            <android.support.v7.widget.CardView
-                android:layout_marginTop="16dp"
+            <com.google.android.gms.maps.MapView
+                android:id="@+id/mv_mapview"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <com.google.android.gms.maps.MapView
-                    android:id="@+id/mv_mapview"
-                    android:layout_width="match_parent"
-                    android:layout_height="250dp"></com.google.android.gms.maps.MapView>
-            </android.support.v7.widget.CardView>
+                android:layout_height="250dp"/>
 
         </LinearLayout>
 

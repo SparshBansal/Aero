@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.awesomedev.smartindiahackathon.Fragments.DetailsActivityFragment;
 import com.awesomedev.smartindiahackathon.R;
+import com.google.android.gms.maps.model.LatLng;
 
 import butterknife.BindString;
 import butterknife.ButterKnife;
@@ -36,7 +37,12 @@ public class DetailsActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        Log.d(TAG, "onCreate: " + this.KEY_AIRPORT);
+        Log.d(TAG, "onCreate: onCreateActivity is called");
+
+        if (savedInstanceState == null)
+            Log.d(TAG, "onCreate: savedInstanceState is null");
+        else
+            Log.d(TAG, "onCreate: savedInstanceState is not null");
 
         Bundle args = new Bundle();
 
@@ -48,7 +54,19 @@ public class DetailsActivity extends AppCompatActivity {
         detailsFragment = new DetailsActivityFragment();
         detailsFragment.setArguments(args);
 
-        getSupportFragmentManager().beginTransaction().add(R.id.fl_container,detailsFragment).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fl_container,detailsFragment).commit();
     }
 
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy: Activity Destroyed");
+    }
+
+    @Override
+    public void onBackPressed() {
+        Log.d(TAG, "onBackPressed: ");
+        super.onBackPressed();
+    }
 }

@@ -1,14 +1,16 @@
 package com.awesomedev.smartindiahackathon.Fragments;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -28,6 +30,10 @@ import com.awesomedev.smartindiahackathon.Models.Route.Routes;
 import com.awesomedev.smartindiahackathon.R;
 import com.awesomedev.smartindiahackathon.Util.RetrofitHelper;
 import com.awesomedev.smartindiahackathon.Util.Utilities;
+import com.awesomedev.smartindiahackathon.Views.CustomMapView;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -50,7 +56,9 @@ import retrofit2.Response;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class DetailsActivityFragment extends Fragment implements ActivityCompat.OnRequestPermissionsResultCallback, View.OnClickListener {
+public class DetailsActivityFragment extends Fragment implements ActivityCompat.OnRequestPermissionsResultCallback,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
 
 
     private static final String TAG = DetailsActivityFragment.class.getSimpleName();
@@ -73,9 +81,6 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     @BindView(R.id.sv_content_view)
     ScrollView scrollView;
 
-    @BindView(R.id.b_estimate_time)
-    Button bEstimateTime;
-
     private GoogleMap map = null;
 
     private String airport = null;
@@ -85,6 +90,9 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
     /*Constants*/
     private static final int REQUEST_PERMISSION = 100;
+    private static final int REQUEST_RESOLVE_ERROR = 101;
+
+    private static GoogleApiClient mClient = null;
 
     public DetailsActivityFragment() {
 
@@ -97,19 +105,31 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         View rootView = inflater.inflate(R.layout.fragment_details, container, false);
         ButterKnife.bind(this, rootView);
 
+        Log.d(TAG, "onCreateView: onCreateFragment Called");
+        if (savedInstanceState == null)
+            Log.d(TAG, "onCreateView: saveInstanceStateFragment is null");
+        else
+            Log.d(TAG, "onCreateView: saveInstanceStateFragment is not null");
+
+        if (mapView == null)
+            Log.d(TAG, "onCreateView: Mapview is null");
+        else
+            Log.d(TAG, "onCreateView: MapView is not null");
+
+        if (map == null)
+            Log.d(TAG, "onCreateView: Map is null");
+        else
+            Log.d(TAG, "onCreateView: Map is not null");
+
         Bundle args = getArguments();
 
         this.airport = args.getString(KEY_AIRPORT);
         this.carrier = args.getString(KEY_CARRIER);
         this.flight = args.getString(KEY_FLIGHT);
 
-        Log.d(TAG, "onCreateView: Airport : " + airport);
-        Log.d(TAG, "onCreateView: Carrier : " + carrier);
-        Log.d(TAG, "onCreateView: Flight Number : " + flight);
 
         // Get the flight details asynchronously
         // fetchFlightDetails(airport,carrier,flight);
-        bEstimateTime.setEnabled(false);
 
         // Sets up consistent looking scrolling behaviour
         scrollView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
@@ -123,46 +143,111 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                 else
                     paddingTop = basePadding - scrollView.getScrollY();
 
-                scrollView.setPadding(basePadding,paddingTop,basePadding,basePadding);
+                scrollView.setPadding(basePadding, paddingTop, basePadding, basePadding);
             }
         });
 
         mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(new OnMapReadyCallback() {
-            @Override
-            public void onMapReady(GoogleMap googleMap) {
-                map = googleMap;
-                map.getUiSettings().setMyLocationButtonEnabled(true);
-                bEstimateTime.setEnabled(true);
-            }
-        });
 
-        bEstimateTime.setOnClickListener(this);
+        initMapAndApiClient();
+
         return rootView;
+    }
+
+    void initMapAndApiClient() {
+        if (map == null) {
+            mapView.getMapAsync(new OnMapReadyCallback() {
+                @Override
+                public void onMapReady(GoogleMap googleMap) {
+                    Log.d(TAG, "onMapReady: ");
+
+                    map = googleMap;
+                    map.getUiSettings().setMyLocationButtonEnabled(true);
+                    initApiClient();
+                }
+            });
+        } else {
+            initApiClient();
+        }
+    }
+
+    void initApiClient() {
+        if (mClient == null) {
+            mClient = new GoogleApiClient.Builder(getActivity())
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
+
+        }
+        mClient.connect();
+    }
+
+    @Override
+    public void onStart() {
+        Log.d(TAG, "onStart: onStartFragment is called");
+        mapView.onStart();
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        Log.d(TAG, "onStop: onStopFragment is called");
+        mapView.onStop();
+        super.onStop();
     }
 
     @Override
     public void onPause() {
-        super.onPause();
+        Log.d(TAG, "onPause: onPauseFragment is called");
         mapView.onPause();
+        mClient.disconnect();
+        super.onPause();
     }
 
     @Override
     public void onResume() {
-        super.onResume();
+        Log.d(TAG, "onResume: onResumeFragment is called");
         mapView.onResume();
+        initMapAndApiClient();
+        super.onResume();
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
+        Log.d(TAG, "onDestroy: onDestroyFragment is called");
         mapView.onDestroy();
+        super.onDestroy();
     }
 
     @Override
     public void onLowMemory() {
-        super.onLowMemory();
         mapView.onLowMemory();
+        super.onLowMemory();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        Log.d(TAG, "onSaveInstanceState: onSaveInstanceStateFragment is called");
+        mapView.onSaveInstanceState(outState);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onDestroyView() {
+        Log.d(TAG, "onDestroyView: onDestroyViewFragment is called");
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_RESOLVE_ERROR) {
+            if (resultCode == Activity.RESULT_OK) {
+                if (!mClient.isConnected() && !mClient.isConnecting()) {
+                    mClient.connect();
+                }
+            }
+        }
     }
 
     @Override
@@ -175,6 +260,33 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
             }
         }
     }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "onConnected: onClientConnected Called");
+        // Play services connected , now proceed with the flow
+        doMapStuff();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Toast.makeText(getActivity(), "Connection Suspended", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        if (connectionResult.hasResolution()) {
+            try {
+                connectionResult.startResolutionForResult(getActivity(), REQUEST_RESOLVE_ERROR);
+            } catch (IntentSender.SendIntentException exception) {
+                exception.printStackTrace();
+            }
+        } else {
+            Toast.makeText(getActivity(), "Google play service is required for this application",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     private void fetchFlightDetails(String airport, String carrier, String flight) {
         Call<FlightDetails> call = RetrofitHelper.getFlightServiceInstance().getFlightDetails(airport, carrier, flight);
@@ -221,15 +333,15 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
             // Find the directions from the current location to the airport using
             // Maps Directions API
             String origin = Double.toString(currentLocation.getLatitude()) + "," + Double.toString(currentLocation.getLongitude());
-            String destination = this.airport.replace(' ','+');
-
-            Call<RouteDirections> call = RetrofitHelper.getGoogleMapsServiceInstance().getDirections(origin,destination,API_KEY);
+            String destination = this.airport.replace(' ', '+');
+            Log.d(TAG, "doMapStuff: " + "Map stuff called");
+            Call<RouteDirections> call = RetrofitHelper.getGoogleMapsServiceInstance().getDirections(origin, destination, API_KEY);
+            Log.d(TAG, "doMapStuff: " + call.request().url().toString());
             call.enqueue(new Callback<RouteDirections>() {
                 @Override
                 public void onResponse(Call<RouteDirections> call, Response<RouteDirections> response) {
                     Log.d(TAG, "onResponse: Response received");
                     Log.d(TAG, "onResponse: " + call.request().url().toString());
-                    Toast.makeText(getActivity(), "Response received", Toast.LENGTH_SHORT).show();
 
                     // Get the directions polylines and plot on the map
                     RouteDirections directions = response.body();
@@ -241,6 +353,8 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                     float estimatedTime = firstLeg.getDuration().getValue();
                     float estimatedDistance = firstLeg.getDistance().getValue();
 
+                    Toast.makeText(getActivity(), "Estimated Time : " + firstLeg.getDuration().getText(), Toast.LENGTH_SHORT).show();
+
                     // Plot the polyline on the map
                     OverviewPolyline overviewPolyline = shortestRoute.getOverviewPolyline();
                     plotPolyline(overviewPolyline);
@@ -248,13 +362,25 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
                 @Override
                 public void onFailure(Call<RouteDirections> call, Throwable t) {
+                    Log.d(TAG, "onFailure: " + call.request().url().toString());
                     Log.d(TAG, "onFailure: " + t.getMessage());
                 }
             });
+        } else {
+            Log.d(TAG, "doMapStuff: " + "current location is null");
         }
     }
 
-    private void plotPolyline(OverviewPolyline overviewPolyline){
+
+    public Location getCurrentLocation(Context context) {
+        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mClient);
+        if (mLastLocation == null) {
+            Toast.makeText(context, "Last Location is null", Toast.LENGTH_SHORT).show();
+        }
+        return mLastLocation;
+    }
+
+    private void plotPolyline(OverviewPolyline overviewPolyline) {
         List<LatLng> points = decodePoly(overviewPolyline.getPoints());
         PolylineOptions lineOptions = new PolylineOptions();
 
@@ -299,29 +425,4 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         return poly;
     }
 
-    public Location getCurrentLocation(Context context) {
-        LocationManager manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        Criteria criteria = new Criteria();
-        Location location = manager.getLastKnownLocation(manager.getBestProvider(criteria, false));
-        return location;
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.b_estimate_time:
-                // Check for ACCESS_FINE_LOCATION permission
-                if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    // Request the permission
-
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                            REQUEST_PERMISSION);
-                }
-                // Have the permission
-                else {
-                    doMapStuff();
-                }
-                break;
-        }
-    }
 }
