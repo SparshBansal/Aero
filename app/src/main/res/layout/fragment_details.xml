@@ -8,214 +8,209 @@
 
     tools:context="com.awesomedev.smartindiahackathon.Fragments.DetailsActivityFragment">
 
-    <ScrollView
-        android:id="@+id/sv_content_view"
+
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <LinearLayout
+        <!-- Google Map view  -->
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/mv_mapview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="10dp"
-            android:orientation="vertical">
+            android:layout_height="match_parent" />
 
-            <!--Flight Details cardview-->
-            <android.support.v7.widget.CardView
-                android:id="@+id/cv_flight_details_view"
+
+        <!--Flight Details cardview-->
+        <android.support.v7.widget.CardView
+            android:id="@+id/cv_flight_details_view"
+            android:visibility="invisible"
+            android:layout_alignParentBottom="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-                <LinearLayout
+                <RelativeLayout
+                    android:id="@+id/rl_cv_header_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:background="#2196F3"
+                    android:paddingBottom="8dp"
+                    android:paddingLeft="16dp"
+                    android:paddingTop="8dp">
 
-                    <RelativeLayout
-                        android:id="@+id/rl_cv_header_view"
+                    <TextView
+                        android:id="@+id/tv_airport"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="#2196F3"
-                        android:paddingBottom="8dp"
-                        android:paddingLeft="16dp"
-                        android:paddingTop="8dp">
-
-                        <TextView
-                            android:id="@+id/tv_airport"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="sans-serif"
-                            android:text="IGI Airport"
-                            android:textSize="24sp" />
+                        android:fontFamily="sans-serif"
+                        android:text="IGI Airport"
+                        android:textSize="24sp" />
 
 
-                        <TextView
-                            android:id="@+id/tv_flightNumber"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@id/tv_airport"
-                            android:text="F3200"
-                            android:textSize="16sp" />
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:id="@+id/rl_cv_content_view"
+                    <TextView
+                        android:id="@+id/tv_flightNumber"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="16dp">
+                        android:layout_below="@id/tv_airport"
+                        android:text="F3200"
+                        android:textSize="16sp" />
+                </RelativeLayout>
 
+                <RelativeLayout
+                    android:id="@+id/rl_cv_content_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/ll_departview"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <!--"Departing from India" view -->
                         <LinearLayout
-                            android:id="@+id/ll_departview"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical">
+                            android:orientation="horizontal">
 
-                            <!--"Departing from India" view -->
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                            <TextView
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal">
+                                android:text="Departing From:"
+                                android:textSize="18sp" />
 
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Departing From:"
-                                    android:textSize="18sp" />
-
-                                <TextView
-                                    android:id="@+id/tv_depart_location_view"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginLeft="4dp"
-                                    android:text="India"
-                                    android:textSize="18sp" />
-                            </LinearLayout>
-
-                            <!--"IND + Time and Gate view-->
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                            <TextView
+                                android:id="@+id/tv_depart_location_view"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:orientation="horizontal">
-
-                                <TextView
-                                    android:id="@+id/tv_depart_code_view"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="8dp"
-                                    android:text="IND"
-                                    android:textSize="20sp" />
-
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginLeft="16dp"
-                                    android:layout_marginTop="4dp"
-                                    android:layout_weight="1"
-                                    android:orientation="vertical">
-
-                                    <TextView
-                                        android:id="@+id/tv_depart_time_view"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="0dp"
-                                        android:layout_weight="1"
-                                        android:text="7:09pm(sched. 5:20pm)" />
-
-                                    <TextView
-                                        android:id="@+id/tv_depart_terminal_gate_view"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="0dp"
-                                        android:layout_weight="1"
-                                        android:text="Terminal 4, Gate 6" />
-                                </LinearLayout>
-                            </LinearLayout>
-
-
+                                android:layout_marginLeft="4dp"
+                                android:text="India"
+                                android:textSize="18sp" />
                         </LinearLayout>
 
+                        <!--"IND + Time and Gate view-->
                         <LinearLayout
-                            android:id="@+id/ll_arriveview"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_below="@id/ll_departview"
-                            android:layout_marginTop="20dp"
-                            android:orientation="vertical">
+                            android:layout_marginTop="4dp"
+                            android:orientation="horizontal">
 
-                            <!--"Departing from India" view -->
-                            <LinearLayout
-                                android:layout_width="match_parent"
+                            <TextView
+                                android:id="@+id/tv_depart_code_view"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="horizontal">
+                                android:layout_marginTop="8dp"
+                                android:text="IND"
+                                android:textSize="20sp" />
 
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Arriving At:"
-                                    android:textSize="18sp" />
-
-                                <TextView
-                                    android:id="@+id/tv_arrive_location_view"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginLeft="4dp"
-                                    android:text="Taipei"
-                                    android:textSize="18sp" />
-                            </LinearLayout>
-
-                            <!--"IND + Time and Gate view-->
                             <LinearLayout
-                                android:layout_width="match_parent"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
+                                android:layout_marginLeft="16dp"
                                 android:layout_marginTop="4dp"
-                                android:orientation="horizontal">
+                                android:layout_weight="1"
+                                android:orientation="vertical">
 
                                 <TextView
-                                    android:id="@+id/tv_arrive_code_view"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="8dp"
-                                    android:text="TPE"
-                                    android:textSize="20sp" />
-
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginLeft="16dp"
-                                    android:layout_marginTop="4dp"
+                                    android:id="@+id/tv_depart_time_view"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
                                     android:layout_weight="1"
-                                    android:orientation="vertical">
+                                    android:text="7:09pm(sched. 5:20pm)" />
 
-                                    <TextView
-                                        android:id="@+id/tv_arrive_time_view"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="0dp"
-                                        android:layout_weight="1"
-                                        android:text="10:20pm(sched. 5:20pm)" />
-
-                                    <TextView
-                                        android:id="@+id/tv_arrive_terminal_gate_view"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="0dp"
-                                        android:layout_weight="1"
-                                        android:text="Terminal 2, Gate 8" />
-                                </LinearLayout>
+                                <TextView
+                                    android:id="@+id/tv_depart_terminal_gate_view"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="1"
+                                    android:text="Terminal 4, Gate 6" />
                             </LinearLayout>
-
-
                         </LinearLayout>
-                    </RelativeLayout>
 
-                </LinearLayout>
 
-            </android.support.v7.widget.CardView>
+                    </LinearLayout>
 
-            <!-- Google Map view  -->
-            <com.google.android.gms.maps.MapView
-                android:id="@+id/mv_mapview"
-                android:layout_width="match_parent"
-                android:layout_height="250dp"/>
+                    <LinearLayout
+                        android:id="@+id/ll_arriveview"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/ll_departview"
+                        android:layout_marginTop="20dp"
+                        android:orientation="vertical">
 
-        </LinearLayout>
+                        <!--"Departing from India" view -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
 
-    </ScrollView>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Arriving At:"
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:id="@+id/tv_arrive_location_view"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginLeft="4dp"
+                                android:text="Taipei"
+                                android:textSize="18sp" />
+                        </LinearLayout>
+
+                        <!--"IND + Time and Gate view-->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/tv_arrive_code_view"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="TPE"
+                                android:textSize="20sp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginLeft="16dp"
+                                android:layout_marginTop="4dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tv_arrive_time_view"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="1"
+                                    android:text="10:20pm(sched. 5:20pm)" />
+
+                                <TextView
+                                    android:id="@+id/tv_arrive_terminal_gate_view"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="1"
+                                    android:text="Terminal 2, Gate 8" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+
+                    </LinearLayout>
+                </RelativeLayout>
+
+            </LinearLayout>
+
+        </android.support.v7.widget.CardView>
+    </RelativeLayout>
 
 </LinearLayout>

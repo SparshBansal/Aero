@@ -1,6 +1,8 @@
 package com.awesomedev.smartindiahackathon.Fragments;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -9,15 +11,19 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
+import android.support.annotation.IntegerRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.ListViewCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.Toast;
@@ -79,14 +85,17 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     @BindView(R.id.mv_mapview)
     MapView mapView;
 
-    @BindView(R.id.sv_content_view)
-    ScrollView scrollView;
+    @BindView(R.id.cv_flight_details_view)
+    CardView cardView;
+
 
     private GoogleMap map = null;
 
     private String airport = null;
     private String carrier = null;
     private String flight = null;
+
+    private static boolean isAnimating = false;
 
 
     /*Constants*/
@@ -119,24 +128,16 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         // Get the flight details asynchronously
         // fetchFlightDetails(airport,carrier,flight);
 
-        // Sets up consistent looking scrolling behaviour
-//        scrollView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
-//            @Override
-//            public void onScrollChanged() {
-//                int basePadding = Utilities.dpToPx(8);
-//                int paddingTop = basePadding;
-//
-//                if (basePadding - scrollView.getScrollY() < 0)
-//                    paddingTop = 0;
-//                else
-//                    paddingTop = basePadding - scrollView.getScrollY();
-//
-//                scrollView.setPadding(basePadding, paddingTop, basePadding, basePadding);
-//            }
-//        });
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
+
+        /*cardView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+
+            }
+        });*/
 
         return rootView;
     }
@@ -321,10 +322,6 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         // Get the current location and zoom the camera towards it
         Location currentLocation = getCurrentLocation(getActivity());
         if (currentLocation != null) {
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(
-                    new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 15);
-            map.animateCamera(cameraUpdate);
-
 
             // Find the directions from the current location to the airport using
             // Maps Directions API
@@ -366,10 +363,15 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
                     LatLngBounds bounds = builder.build();
 
-                    int padding = 50;
+                    int paddingBottom = cardView.getHeight();
+                    int paddingSides = Utilities.dpToPx(48);
 
-                    CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds,padding);
+                    map.setPadding(0,0,0,paddingBottom);
+
+                    CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds,paddingSides);
                     map.animateCamera(update);
+
+                    runCardViewAnimation();
                 }
 
                 @Override
@@ -390,6 +392,37 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
             Toast.makeText(context, "Last Location is null", Toast.LENGTH_SHORT).show();
         }
         return mLastLocation;
+    }
+
+    private void runCardViewAnimation(){
+        cardView.setTranslationY(cardView.getHeight());
+        cardView.setVisibility(View.VISIBLE);
+        cardView.animate()
+                .translationY(0)
+                .setInterpolator(new DecelerateInterpolator(1.5f))
+                .setDuration(800)
+                .setListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                        isAnimating = true;
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        isAnimating = false;
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        isAnimating = false;
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+
+                    }
+                })
+                .start();
     }
 
     private void plotPolyline(OverviewPolyline overviewPolyline) {
