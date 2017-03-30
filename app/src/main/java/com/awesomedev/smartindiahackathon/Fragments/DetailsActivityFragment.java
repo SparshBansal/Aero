@@ -41,6 +41,7 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ import retrofit2.Response;
  */
 public class DetailsActivityFragment extends Fragment implements ActivityCompat.OnRequestPermissionsResultCallback,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
 
 
     private static final String TAG = DetailsActivityFragment.class.getSimpleName();
@@ -95,7 +96,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     private static GoogleApiClient mClient = null;
 
     public DetailsActivityFragment() {
-
+        super();
     }
 
     @Override
@@ -106,20 +107,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         ButterKnife.bind(this, rootView);
 
         Log.d(TAG, "onCreateView: onCreateFragment Called");
-        if (savedInstanceState == null)
-            Log.d(TAG, "onCreateView: saveInstanceStateFragment is null");
-        else
-            Log.d(TAG, "onCreateView: saveInstanceStateFragment is not null");
-
-        if (mapView == null)
-            Log.d(TAG, "onCreateView: Mapview is null");
-        else
-            Log.d(TAG, "onCreateView: MapView is not null");
-
-        if (map == null)
-            Log.d(TAG, "onCreateView: Map is null");
-        else
-            Log.d(TAG, "onCreateView: Map is not null");
+        buildApi();
 
         Bundle args = getArguments();
 
@@ -132,26 +120,33 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         // fetchFlightDetails(airport,carrier,flight);
 
         // Sets up consistent looking scrolling behaviour
-        scrollView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
-            @Override
-            public void onScrollChanged() {
-                int basePadding = Utilities.dpToPx(8);
-                int paddingTop = basePadding;
-
-                if (basePadding - scrollView.getScrollY() < 0)
-                    paddingTop = 0;
-                else
-                    paddingTop = basePadding - scrollView.getScrollY();
-
-                scrollView.setPadding(basePadding, paddingTop, basePadding, basePadding);
-            }
-        });
+//        scrollView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+//            @Override
+//            public void onScrollChanged() {
+//                int basePadding = Utilities.dpToPx(8);
+//                int paddingTop = basePadding;
+//
+//                if (basePadding - scrollView.getScrollY() < 0)
+//                    paddingTop = 0;
+//                else
+//                    paddingTop = basePadding - scrollView.getScrollY();
+//
+//                scrollView.setPadding(basePadding, paddingTop, basePadding, basePadding);
+//            }
+//        });
 
         mapView.onCreate(savedInstanceState);
-
-        initMapAndApiClient();
+        mapView.getMapAsync(this);
 
         return rootView;
+    }
+
+    void buildApi(){
+        mClient = new GoogleApiClient.Builder(getActivity())
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
     }
 
     void initMapAndApiClient() {
@@ -180,6 +175,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                     .build();
 
         }
+        Log.d(TAG, "initApiClient: initApiClient Called");
         mClient.connect();
     }
 
@@ -187,6 +183,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     public void onStart() {
         Log.d(TAG, "onStart: onStartFragment is called");
         mapView.onStart();
+        mClient.connect();
         super.onStart();
     }
 
@@ -194,6 +191,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     public void onStop() {
         Log.d(TAG, "onStop: onStopFragment is called");
         mapView.onStop();
+        mClient.disconnect();
         super.onStop();
     }
 
@@ -201,7 +199,6 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     public void onPause() {
         Log.d(TAG, "onPause: onPauseFragment is called");
         mapView.onPause();
-        mClient.disconnect();
         super.onPause();
     }
 
@@ -209,7 +206,6 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     public void onResume() {
         Log.d(TAG, "onResume: onResumeFragment is called");
         mapView.onResume();
-        initMapAndApiClient();
         super.onResume();
     }
 
@@ -358,6 +354,22 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                     // Plot the polyline on the map
                     OverviewPolyline overviewPolyline = shortestRoute.getOverviewPolyline();
                     plotPolyline(overviewPolyline);
+
+                    // Zoom out to the bounds
+                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+                    LatLng northeast = shortestRoute.getBounds().getNortheast().getLatLng();
+                    LatLng southwest = shortestRoute.getBounds().getSouthwest().getLatLng();
+
+                    builder.include(northeast);
+                    builder.include(southwest);
+
+                    LatLngBounds bounds = builder.build();
+
+                    int padding = 50;
+
+                    CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds,padding);
+                    map.animateCamera(update);
                 }
 
                 @Override
@@ -425,4 +437,9 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         return poly;
     }
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        Toast.makeText(getActivity(), "Map is ready", Toast.LENGTH_SHORT).show();
+        map = googleMap;
+    }
 }

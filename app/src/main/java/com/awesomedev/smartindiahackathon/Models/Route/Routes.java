@@ -10,6 +10,8 @@ public class Routes {
     String summary;
     List<Legs> legs;
     OverviewPolyline overview_polyline;
+    Bounds bounds;
+
 
     public OverviewPolyline getOverviewPolyline() {
         return overview_polyline;
@@ -23,6 +25,10 @@ public class Routes {
         return legs;
     }
 
+    public Bounds getBounds() {
+        return bounds;
+    }
+
     public void setSummary(String summary) {
         this.summary = summary;
     }
@@ -34,4 +40,9 @@ public class Routes {
     public void setLegs(List<Legs> legs) {
         this.legs = legs;
     }
+
+    public void setBounds(Bounds bounds) {
+        this.bounds = bounds;
+    }
 }
+
