@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "262341843633",
+    "firebase_url": "https://throughputcalc.firebaseio.com",
+    "project_id": "throughputcalc",
+    "storage_bucket": "throughputcalc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:262341843633:android:22b2897c8ac1f22c",
+        "android_client_info": {
+          "package_name": "com.awesomedev.smartindiahackathon"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "262341843633-8s6k5v4jc3elc28obd1ftmttetmfhjr0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.awesomedev.smartindiahackathon",
+            "certificate_hash": "3cb8c844f21680bcc14713a094537661a68491a7"
+          }
+        },
+        {
+          "client_id": "262341843633-9idojdc2cgrehl8b8g32l7dpsr7m064a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAs36s76j5fESbFK09ka1JEKbXwswHQKds"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "262341843633-giqj1hk2a2c6dhp4rlss3f2okbkk38j7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.Avinav.Throughput-Calculation"
+              }
+            },
+            {
+              "client_id": "262341843633-9idojdc2cgrehl8b8g32l7dpsr7m064a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

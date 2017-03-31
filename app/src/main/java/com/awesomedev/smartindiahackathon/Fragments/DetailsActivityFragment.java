@@ -1,8 +1,6 @@
 package com.awesomedev.smartindiahackathon.Fragments;
 
-import android.Manifest;
 import android.animation.Animator;
-import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -11,21 +9,16 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
-import android.support.annotation.IntegerRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
-import android.support.v7.widget.ListViewCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.animation.DecelerateInterpolator;
-import android.widget.Button;
-import android.widget.ScrollView;
 import android.widget.Toast;
 
 import com.awesomedev.smartindiahackathon.Models.FlightDetails;
@@ -36,7 +29,6 @@ import com.awesomedev.smartindiahackathon.Models.Route.Routes;
 import com.awesomedev.smartindiahackathon.R;
 import com.awesomedev.smartindiahackathon.Util.RetrofitHelper;
 import com.awesomedev.smartindiahackathon.Util.Utilities;
-import com.awesomedev.smartindiahackathon.Views.CustomMapView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -49,6 +41,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.firebase.database.DatabaseReference;
 
 import java.util.ArrayList;
 import java.util.List;

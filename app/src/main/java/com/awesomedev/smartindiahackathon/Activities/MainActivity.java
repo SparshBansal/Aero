@@ -11,6 +11,12 @@ import android.widget.Toast;
 
 import com.awesomedev.smartindiahackathon.Activities.DetailsActivity;
 import com.awesomedev.smartindiahackathon.R;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import butterknife.BindString;
 import butterknife.BindView;
@@ -41,6 +47,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @BindString(R.string.KEY_FLIGHT)
     String KEY_FLIGHT;
 
+    // Database Reference for accessing firebase application
+    private static DatabaseReference reference = null;
+    private static FirebaseDatabase firebaseDatabase = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +60,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ButterKnife.bind(this);
 
         bEstimate.setOnClickListener(this);
+
+        // Initialize Firebase
+        FirebaseApp.initializeApp(this);
+        firebaseDatabase = FirebaseDatabase.getInstance();
+        reference = firebaseDatabase.getReference();
+
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot airportSnapshot : dataSnapshot.getChildren()){
+                    Log.d(TAG, "onDataChange: " + airportSnapshot.getKey());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
