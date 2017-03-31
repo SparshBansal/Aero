@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.awesomedev.smartindiahackathon.Activities.DetailsActivity;
+import com.awesomedev.smartindiahackathon.Models.Counter;
 import com.awesomedev.smartindiahackathon.R;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
@@ -66,11 +67,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         firebaseDatabase = FirebaseDatabase.getInstance();
         reference = firebaseDatabase.getReference();
 
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
+        reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot airportSnapshot : dataSnapshot.getChildren()){
-                    Log.d(TAG, "onDataChange: " + airportSnapshot.getKey());
+                    for (DataSnapshot carrierSnapshot : airportSnapshot.getChildren()){
+                        for (DataSnapshot counterSnapshot : carrierSnapshot.getChildren()){
+                            Counter mCounter = counterSnapshot.getValue(Counter.class);
+                            Log.d(TAG, "onDataChange: " + mCounter.getThroughput());
+                        }
+                    }
                 }
             }
 

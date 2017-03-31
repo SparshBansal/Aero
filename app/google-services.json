@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "262341843633-nko22hc5ekpuo0u85nqaq5j64tpvotpa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.awesomedev.smartindiahackathon",
+            "certificate_hash": "078094272938fede23ce3e6decfc341bd7487622"
+          }
+        },
+        {
           "client_id": "262341843633-8s6k5v4jc3elc28obd1ftmttetmfhjr0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
