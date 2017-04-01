@@ -26,7 +26,12 @@
         <activity
             android:name=".Activities.DetailsActivity"
             android:label="@string/title_activity_details"
-            android:theme="@style/AppTheme.NoActionBar"/>
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+        <provider
+            android:authorities="com.awesomedev.smartindiahackathon"
+            android:name="com.awesomedev.smartindiahackathon.Data.DataProvider"
+            android:exported="false"
+            android:syncable="true"></provider>
     </application>
 
 </manifest>
