@@ -1,5 +1,6 @@
 package com.awesomedev.smartindiahackathon;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -25,10 +26,12 @@ public class ProviderTest {
     private static Context context = null;
     private static final String TAG = ProviderTest.class.getSimpleName();
 
+    static {
+        context = InstrumentationRegistry.getTargetContext();
+    }
 
     @Test
     public void testDeleteAllRows() {
-        context = InstrumentationRegistry.getContext();
 
         int airportRowsDeleted = context.getContentResolver().delete(AirportEntry.CONTENT_URI, null, null);
         int carrierRowsDeleted = context.getContentResolver().delete(CarrierEntry.CONTENT_URI, null, null);
@@ -53,7 +56,63 @@ public class ProviderTest {
 
     @Test
     public void testInsertReadProvider(){
+        ContentValues airportValues = getAirportValues();
+        context.getContentResolver().insert(AirportEntry.CONTENT_URI,airportValues);
+        final String airportSelection = AirportEntry.COLUMN_AIRPORT_NAME + "=?";
+        final String airportSelectionArgs[] = new String[]{airportValues.getAsString(AirportEntry.COLUMN_AIRPORT_NAME)};
 
+        Cursor mCursor = context.getContentResolver().query(AirportEntry.CONTENT_URI,
+                null,
+                AirportEntry.COLUMN_AIRPORT_NAME + " =?" ,
+                airportSelectionArgs,
+                null
+        );
+
+        assertEquals(true,mCursor.getCount() > 0);
+
+        mCursor.moveToFirst();
+        long airport_id = mCursor.getInt(mCursor.getColumnIndex(AirportEntry._ID));
+
+        ContentValues carrierValues = getCarrierValues(airport_id);
+        context.getContentResolver().insert(CarrierEntry.CONTENT_URI,carrierValues);
+        mCursor = context.getContentResolver().query(CarrierEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
+        assertEquals(true,mCursor.getCount()> 0);
+
+        mCursor = context.getContentResolver().query(CarrierEntry.buildCarrierUri(airport_id),
+                null,
+                null,
+                null,
+                null
+        );
+
+        assertEquals(true,mCursor.getCount() > 0);
+        mCursor.moveToFirst();
+        final int carrier_id = mCursor.getInt(mCursor.getColumnIndex(CarrierEntry._ID));
+
+        ContentValues counterValues = getCounterValues(carrier_id);
+        context.getContentResolver().insert(CounterEntry.CONTENT_URI,counterValues);
+        mCursor = context.getContentResolver().query(CounterEntry.CONTENT_URI ,
+                null,
+                null,
+                null,
+                null
+        );
+
+        assertEquals(true,mCursor.getCount()>0);
+
+        mCursor = context.getContentResolver().query(CounterEntry.buildCounterUri(carrier_id),
+                null,
+                null,
+                null,
+                null
+        );
+
+        assertEquals(true,mCursor.getCount() >0);
     }
 
     @Test
@@ -81,4 +140,28 @@ public class ProviderTest {
         assertEquals(CounterEntry.CONTENT_TYPE, COUNTER_WITH_CARRIER_TYPE);
     }
 
+
+    private ContentValues getAirportValues(){
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(AirportEntry.COLUMN_AIRPORT_NAME , "Indira Gandhi International Airport");
+        return contentValues;
+    }
+
+
+    private ContentValues getCarrierValues(long airport_key){
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(CarrierEntry.COLUMN_AIRPORT_KEY,airport_key);
+        contentValues.put(CarrierEntry.COLUMN_CARRIER_NAME,"Kingfisher");
+        return contentValues;
+    }
+
+    private ContentValues getCounterValues(long carrier_id){
+        ContentValues values = new ContentValues();
+        values.put(CounterEntry.COLUMN_CARRIER_KEY,carrier_id);
+        values.put(CounterEntry.COLUMN_COUNTER_COUNT,5);
+        values.put(CounterEntry.COLUMN_COUNTER_NUMBER,1);
+        values.put(CounterEntry.COLUMN_COUNTER_THROUGHPUT,5.23);
+
+        return values;
+    }
 }
