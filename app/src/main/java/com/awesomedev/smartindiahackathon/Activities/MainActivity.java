@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.awesomedev.smartindiahackathon.Activities.DetailsActivity;
 import com.awesomedev.smartindiahackathon.Models.Counter;
+import com.awesomedev.smartindiahackathon.Models.FlightDetails;
 import com.awesomedev.smartindiahackathon.R;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
@@ -18,6 +19,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindString;
 import butterknife.BindView;
@@ -67,14 +71,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         firebaseDatabase = FirebaseDatabase.getInstance();
         reference = firebaseDatabase.getReference();
 
-        reference.addValueEventListener(new ValueEventListener() {
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot airportSnapshot : dataSnapshot.getChildren()){
                     for (DataSnapshot carrierSnapshot : airportSnapshot.getChildren()){
-                        for (DataSnapshot counterSnapshot : carrierSnapshot.getChildren()){
-                            Counter mCounter = counterSnapshot.getValue(Counter.class);
-                            Log.d(TAG, "onDataChange: " + mCounter.getThroughput());
+                        for (DataSnapshot  mSnapshot : carrierSnapshot.getChildren()){
+                            if (mSnapshot.getKey().equals("flight")){
+                                List<FlightDetails> flights = new ArrayList<FlightDetails>();
+                                for (DataSnapshot flight : mSnapshot.getChildren()) {
+                                    FlightDetails flightDetails = flight.getValue(FlightDetails.class);
+                                    flights.add(flightDetails);
+                                    Log.d(TAG, "onDataChange: " + flightDetails.getFlightNo());
+                                }
+                            }
+                            else if (mSnapshot.getKey().equals("carrier")){
+                                List<Counter> counters = new ArrayList<Counter>();
+                                for (DataSnapshot counterSnapshot : mSnapshot.getChildren()){
+                                    counters.add(counterSnapshot.getValue(Counter.class));
+                                }
+                            }
                         }
                     }
                 }
