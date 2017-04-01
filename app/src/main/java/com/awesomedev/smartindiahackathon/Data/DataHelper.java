@@ -14,11 +14,11 @@ import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.*;
 
 public class DataHelper extends SQLiteOpenHelper{
 
-    private static final String DB_NAME = "database";
-    private static final int DB_VERSION = 1;
+    public static final String DB_NAME = "database";
+    public static final int DB_VERSION = 1;
 
-    public DataHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
-        super(context, DB_NAME, factory, DB_VERSION);
+    public DataHelper(Context context) {
+        super(context, DB_NAME, null, DB_VERSION);
     }
 
     @Override
@@ -59,6 +59,14 @@ public class DataHelper extends SQLiteOpenHelper{
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        final String DROP_TABLE_AIRPORT = "DROP TABLE IF EXISTS " + AirportEntry.TABLE_NAME;
+        final String DROP_TABLE_CARRIER = "DROP TABLE IF EXISTS " + CarrierEntry.TABLE_NAME;
+        final String DROP_TABLE_COUNTER = "DROP TABLE IF EXISTS " + CounterEntry.TABLE_NAME;
 
+        db.execSQL(DROP_TABLE_COUNTER);
+        db.execSQL(DROP_TABLE_CARRIER);
+        db.execSQL(DROP_TABLE_AIRPORT);
+
+        onCreate(db);
     }
 }
