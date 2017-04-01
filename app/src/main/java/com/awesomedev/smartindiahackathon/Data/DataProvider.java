@@ -32,26 +32,41 @@ public class DataProvider extends ContentProvider {
     private static final int COUNTER = 102;
     private static final int CARRIER_WITH_AIRPORT = 103;
     private static final int COUNTER_WITH_CARRIER = 104;
+    private static final int FLIGHT = 105;
+    private static final int FLIGHT_WITH_CARRIER = 106;
 
-    private static SQLiteQueryBuilder sCarrierByAirportQueryBuilder = null;
+    private static SQLiteQueryBuilder sFlightWithCarrierBuilder = null;
+
+    static {
+        sFlightWithCarrierBuilder = new SQLiteQueryBuilder();
+        sFlightWithCarrierBuilder.setTables(
+                AirportEntry.TABLE_NAME + " INNER JOIN " + CarrierEntry.TABLE_NAME + " ON " +
+                        AirportEntry.TABLE_NAME + "." + AirportEntry._ID + " = " +
+                        CarrierEntry.TABLE_NAME + "." + CarrierEntry.COLUMN_AIRPORT_KEY +
+                        " INNER JOIN " + FlightEntry.TABLE_NAME + " ON " +
+                        CarrierEntry.TABLE_NAME + "." + CarrierEntry._ID + " = " +
+                        FlightEntry.TABLE_NAME + "." + FlightEntry.COLUMN_CARRIER_KEY
+        );
+    }
+
+    private static final String flightWithCarrierKeySelection = CarrierEntry.TABLE_NAME + "." +
+            CarrierEntry._ID + "=?";
 
     @Override
     public boolean onCreate() {
-
         mHelper = new DataHelper(getContext());
-
-
         return true;
     }
 
     @Nullable
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        mDatabase = mHelper.getReadableDatabase();
         final int match = matcher.match(uri);
         Cursor mCursor = null;
-        switch (match){
+        switch (match) {
             case AIRPORT:
-                mCursor  = mDatabase.query(AirportEntry.TABLE_NAME,
+                mCursor = mDatabase.query(AirportEntry.TABLE_NAME,
                         projection,
                         selection,
                         selectionArgs,
@@ -102,7 +117,7 @@ public class DataProvider extends ContentProvider {
                 long carrier_id = ContentUris.parseId(uri);
 
                 final String counterSelection = CounterEntry.COLUMN_CARRIER_KEY + " = ? ";
-                final String counterSelectionArgs[] = new String[]{ Long.toString(carrier_id) };
+                final String counterSelectionArgs[] = new String[]{Long.toString(carrier_id)};
 
                 mCursor = mDatabase.query(CounterEntry.TABLE_NAME,
                         projection,
@@ -113,8 +128,24 @@ public class DataProvider extends ContentProvider {
                         sortOrder
                 );
                 break;
+
+            case FLIGHT:
+                mCursor = mDatabase.query(FlightEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+
+            case FLIGHT_WITH_CARRIER:
+                mCursor = getFlightWithCarrier(uri, projection, sortOrder);
+                break;
+
         }
-        mCursor.setNotificationUri(getContext().getContentResolver(),uri);
+        mCursor.setNotificationUri(getContext().getContentResolver(), uri);
         return mCursor;
     }
 
@@ -135,6 +166,10 @@ public class DataProvider extends ContentProvider {
                 return CarrierEntry.CONTENT_TYPE;
             case COUNTER_WITH_CARRIER:
                 return CounterEntry.CONTENT_TYPE;
+            case FLIGHT:
+                return FlightEntry.CONTENT_TYPE;
+            case FLIGHT_WITH_CARRIER:
+                return FlightEntry.CONTENT_ITEM_TYPE;
             default:
                 return null;
         }
@@ -147,17 +182,17 @@ public class DataProvider extends ContentProvider {
         mDatabase = mHelper.getWritableDatabase();
         long _id = -1;
         Uri returnUri = null;
-        switch (match){
+        switch (match) {
             case AIRPORT:
-                _id = mDatabase.insert(AirportEntry.TABLE_NAME,null,values);
+                _id = mDatabase.insert(AirportEntry.TABLE_NAME, null, values);
                 if (_id > 0)
-                    returnUri = uri;
+                    returnUri = ContentUris.withAppendedId(uri, _id);
                 break;
 
             case CARRIER:
-                _id = mDatabase.insert(CarrierEntry.TABLE_NAME , null , values);
+                _id = mDatabase.insert(CarrierEntry.TABLE_NAME, null, values);
                 if (_id > 0)
-                    returnUri = uri;
+                    returnUri = ContentUris.withAppendedId(uri, _id);
                 break;
 
             case COUNTER:
@@ -165,8 +200,14 @@ public class DataProvider extends ContentProvider {
                 if (_id > 0)
                     returnUri = uri;
                 break;
+
+            case FLIGHT:
+                _id = mDatabase.insert(FlightEntry.TABLE_NAME, null, values);
+                if (_id > 0)
+                    returnUri = uri;
+                break;
         }
-        getContext().getContentResolver().notifyChange(uri,null);
+        getContext().getContentResolver().notifyChange(uri, null);
         return returnUri;
     }
 
@@ -176,20 +217,24 @@ public class DataProvider extends ContentProvider {
         mDatabase = mHelper.getWritableDatabase();
         int rowsDeleted = 0;
 
-        switch (match){
+        switch (match) {
             case AIRPORT:
-                rowsDeleted = mDatabase.delete(AirportEntry.TABLE_NAME,selection,selectionArgs);
+                rowsDeleted = mDatabase.delete(AirportEntry.TABLE_NAME, selection, selectionArgs);
                 break;
 
             case CARRIER:
-                rowsDeleted = mDatabase.delete(CarrierEntry.TABLE_NAME,selection,selectionArgs);
+                rowsDeleted = mDatabase.delete(CarrierEntry.TABLE_NAME, selection, selectionArgs);
                 break;
 
             case COUNTER:
-                rowsDeleted = mDatabase.delete(CounterEntry.TABLE_NAME,selection,selectionArgs);
+                rowsDeleted = mDatabase.delete(CounterEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+
+            case FLIGHT:
+                rowsDeleted = mDatabase.delete(FlightEntry.TABLE_NAME, selection, selectionArgs);
                 break;
         }
-        getContext().getContentResolver().notifyChange(uri,null);
+        getContext().getContentResolver().notifyChange(uri, null);
         return rowsDeleted;
     }
 
@@ -199,21 +244,42 @@ public class DataProvider extends ContentProvider {
         mDatabase = mHelper.getWritableDatabase();
         int rowsUpdated = 0;
 
-        switch (match){
+        switch (match) {
             case AIRPORT:
-                rowsUpdated = mDatabase.update(AirportEntry.TABLE_NAME,values,selection,selectionArgs);
+                rowsUpdated = mDatabase.update(AirportEntry.TABLE_NAME, values, selection, selectionArgs);
                 break;
 
             case CARRIER:
-                rowsUpdated = mDatabase.update(CarrierEntry.TABLE_NAME,values,selection,selectionArgs);
+                rowsUpdated = mDatabase.update(CarrierEntry.TABLE_NAME, values, selection, selectionArgs);
                 break;
 
             case COUNTER:
-                rowsUpdated = mDatabase.update(CounterEntry.TABLE_NAME,values,selection,selectionArgs);
+                rowsUpdated = mDatabase.update(CounterEntry.TABLE_NAME, values, selection, selectionArgs);
+                break;
+
+            case FLIGHT:
+                rowsUpdated = mDatabase.update(FlightEntry.TABLE_NAME, values, selection, selectionArgs);
                 break;
         }
-        getContext().getContentResolver().notifyChange(uri,null);
+        getContext().getContentResolver().notifyChange(uri, null);
         return rowsUpdated;
+    }
+
+    private Cursor getFlightWithCarrier(Uri uri, String[] projection, String sortOrder) {
+        final int carrier_id = (int) ContentUris.parseId(uri);
+
+        final String selection = CarrierEntry.TABLE_NAME + "." + CarrierEntry._ID + " =? ";
+        final String selectionArgs[] = new String[]{Integer.toString(carrier_id)};
+
+        Cursor mCursor = sFlightWithCarrierBuilder.query(mHelper.getReadableDatabase(),
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder
+        );
+        return mCursor;
     }
 
     private UriMatcher buildUriMatcher() {
@@ -224,7 +290,8 @@ public class DataProvider extends ContentProvider {
         matcher.addURI(CONTENT_AUTHORITY, PATH_COUNTER, COUNTER);
         matcher.addURI(CONTENT_AUTHORITY, PATH_CARRIER + "/*", CARRIER_WITH_AIRPORT);
         matcher.addURI(CONTENT_AUTHORITY, PATH_COUNTER + "/*", COUNTER_WITH_CARRIER);
-
+        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT, FLIGHT);
+        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT + "/*", FLIGHT_WITH_CARRIER);
         return matcher;
     }
 }

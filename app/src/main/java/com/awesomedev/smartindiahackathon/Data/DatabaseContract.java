@@ -16,6 +16,7 @@ public class DatabaseContract {
     public static final String PATH_AIRPORT = "airport";
     public static final String PATH_CARRIER = "carrier";
     public static final String PATH_COUNTER = "counter";
+    public static final String PATH_FLIGHT = "flight";
 
     public static final class AirportEntry implements BaseColumns{
 
@@ -84,7 +85,46 @@ public class DatabaseContract {
         // Column for storing counter throughput
         public static final String COLUMN_COUNTER_THROUGHPUT = "counter_throughput";
 
+        public static final String COLUMN_COUNTER_AVG_WAITING_TIME = "avg_waiting_time";
+
         public static Uri buildCounterUri(long carrier_id){
+            return ContentUris.withAppendedId(CONTENT_URI,carrier_id);
+        }
+    }
+
+    public static final class FlightEntry implements BaseColumns{
+
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/" +
+                CONTENT_AUTHORITY + "/" + PATH_FLIGHT;
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/" +
+                CONTENT_AUTHORITY + "/" + PATH_FLIGHT;
+
+
+        // Content uri for querying the entire table
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_FLIGHT).build();
+
+        // Name of the table containing list of counters
+        public static final String TABLE_NAME = "flight";
+
+        // Column for storing the _id of the carrier
+        public static final String COLUMN_CARRIER_KEY = "carrier_id";
+
+        // Column for storing counter number
+        public static final String COLUMN_FLIGHT_NUMBER = "flight_number";
+
+        // Column for storing counter count
+        public static final String COLUMN_DELAYED = "delayed";
+
+        // Column for storing counter throughput
+        public static final String COLUMN_DEPARTURE_TIME= "departure_time";
+
+        // Column for storing counter count
+        public static final String COLUMN_DESTINATION = "destination";
+
+        // Column for storing counter throughput
+        public static final String COLUMN_SOURCE= "source";
+
+        public static Uri getFlightUri(int carrier_id){
             return ContentUris.withAppendedId(CONTENT_URI,carrier_id);
         }
     }
