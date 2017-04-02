@@ -2,10 +2,12 @@ package com.awesomedev.smartindiahackathon.Fragments;
 
 import android.animation.Animator;
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
@@ -13,14 +15,20 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.awesomedev.smartindiahackathon.Data.DatabaseContract;
+import com.awesomedev.smartindiahackathon.Models.Counter;
 import com.awesomedev.smartindiahackathon.Models.FlightDetails;
 import com.awesomedev.smartindiahackathon.Models.Route.Legs;
 import com.awesomedev.smartindiahackathon.Models.Route.OverviewPolyline;
@@ -41,9 +49,15 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.vision.text.Text;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindString;
@@ -53,12 +67,14 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.*;
+
 /**
  * A placeholder fragment containing a simple view.
  */
 public class DetailsActivityFragment extends Fragment implements ActivityCompat.OnRequestPermissionsResultCallback,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
+        GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback, LoaderManager.LoaderCallbacks<Cursor> {
 
 
     private static final String TAG = DetailsActivityFragment.class.getSimpleName();
@@ -81,6 +97,26 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     @BindView(R.id.cv_flight_details_view)
     CardView cardView;
 
+    @BindView(R.id.tv_airport)
+    TextView tvAirport;
+
+    @BindView(R.id.tv_flightNumber)
+    TextView tvFlightNumber;
+
+    @BindView(R.id.tv_source)
+    TextView tvSource;
+
+    @BindView(R.id.tv_destination)
+    TextView tvDestination;
+
+    @BindView(R.id.tv_delayedView)
+    TextView tvDelayed;
+
+    @BindView(R.id.tv_departure_time)
+    TextView tvDepartureTime;
+
+    @BindView(R.id.tv_estimateView)
+    TextView tvEstimate;
 
     private GoogleMap map = null;
 
@@ -88,14 +124,26 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     private String carrier = null;
     private String flight = null;
 
+    private int carrier_id;
+
     private static boolean isAnimating = false;
 
+
+    private static final String KEY_AIRPORT_ID = "AIRPORT_ID";
+    private static final String KEY_CARRIER_ID = "CARRIER_ID";
+
+    private static final int FLIGHT_LOADER_ID = 10;
+    private static final int COUNTER_LOADER_ID = 11;
 
     /*Constants*/
     private static final int REQUEST_PERMISSION = 100;
     private static final int REQUEST_RESOLVE_ERROR = 101;
 
+    private static float base_num_mins = 0;
+
     private static GoogleApiClient mClient = null;
+    private static DatabaseReference reference = null;
+    private static FirebaseDatabase firebaseDatabase = null;
 
     public DetailsActivityFragment() {
         super();
@@ -119,58 +167,51 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
 
         // Get the flight details asynchronously
-        // fetchFlightDetails(airport,carrier,flight);
+        this.carrier_id = args.getInt(KEY_CARRIER_ID);
 
+        firebaseDatabase = FirebaseDatabase.getInstance();
+        reference = firebaseDatabase.getReference(this.airport + "/" + this.carrier + "/carrier");
+
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                List<Counter> counters = new ArrayList<Counter>();
+                for (DataSnapshot counterSnapshot : dataSnapshot.getChildren()) {
+                    counters.add(counterSnapshot.getValue(Counter.class));
+                }
+
+                for (Counter counter : counters) {
+                    ContentValues values = new ContentValues();
+                    values.put(CounterEntry.COLUMN_CARRIER_KEY, carrier_id);
+
+                    values.put(CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME, counter.getAvgWaitingTime());
+                    values.put(CounterEntry.COLUMN_COUNTER_NUMBER, counter.getCounterNumber());
+                    values.put(CounterEntry.COLUMN_COUNTER_THROUGHPUT, counter.getThroughput());
+                    values.put(CounterEntry.COLUMN_COUNTER_COUNT, counter.getCounterCount());
+
+                    getActivity().getContentResolver().insert(CounterEntry.CONTENT_URI, values);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
 
-        /*cardView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-
-            }
-        });*/
 
         return rootView;
     }
 
-    void buildApi(){
+    void buildApi() {
         mClient = new GoogleApiClient.Builder(getActivity())
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .build();
-    }
-
-    void initMapAndApiClient() {
-        if (map == null) {
-            mapView.getMapAsync(new OnMapReadyCallback() {
-                @Override
-                public void onMapReady(GoogleMap googleMap) {
-                    Log.d(TAG, "onMapReady: ");
-
-                    map = googleMap;
-                    map.getUiSettings().setMyLocationButtonEnabled(true);
-                    initApiClient();
-                }
-            });
-        } else {
-            initApiClient();
-        }
-    }
-
-    void initApiClient() {
-        if (mClient == null) {
-            mClient = new GoogleApiClient.Builder(getActivity())
-                    .addApi(LocationServices.API)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .build();
-
-        }
-        Log.d(TAG, "initApiClient: initApiClient Called");
-        mClient.connect();
     }
 
     @Override
@@ -255,7 +296,9 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "onConnected: onClientConnected Called");
         // Play services connected , now proceed with the flow
-        doMapStuff();
+
+        // Load the data from the backend
+        getLoaderManager().restartLoader(FLIGHT_LOADER_ID, null, DetailsActivityFragment.this);
     }
 
     @Override
@@ -278,30 +321,19 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     }
 
 
-    private void fetchFlightDetails(String airport, String carrier, String flight) {
-        Call<FlightDetails> call = RetrofitHelper.getFlightServiceInstance().getFlightDetails(airport, carrier, flight);
-        call.enqueue(new Callback<FlightDetails>() {
+    private void updateDetailsView(Cursor data) {
+        data.moveToFirst();
+        tvAirport.setText(data.getString(data.getColumnIndex(AirportEntry.COLUMN_AIRPORT_NAME)));
+        tvSource.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_SOURCE)));
+        tvDestination.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_DESTINATION)));
+        tvDelayed.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_DELAYED)));
+        tvFlightNumber.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_FLIGHT_NUMBER)));
 
-            // Successful response , handle the details
-            @Override
-            public void onResponse(Call<FlightDetails> call, Response<FlightDetails> response) {
-                FlightDetails details = response.body();
+        final String departureTimeString = data.getString(data.getColumnIndex(FlightEntry.COLUMN_DEPARTURE_TIME));
+        final long timestamp= Long.parseLong(departureTimeString);
 
-                // Update details view
-                updateDetailsView(details);
-            }
-
-            @Override
-            public void onFailure(Call<FlightDetails> call, Throwable t) {
-                // Some failure occurred , inform the user
-                Toast.makeText(getActivity(), "Some error occurred, Please retry",
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void updateDetailsView(FlightDetails flightDetails) {
-
+        Date departureDatetime = new Date(timestamp);
+        tvDepartureTime.setText(departureDatetime.toString());
     }
 
 
@@ -339,7 +371,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                     float estimatedTime = firstLeg.getDuration().getValue();
                     float estimatedDistance = firstLeg.getDistance().getValue();
 
-                    Toast.makeText(getActivity(), "Estimated Time : " + firstLeg.getDuration().getText(), Toast.LENGTH_SHORT).show();
+                    base_num_mins = base_num_mins + estimatedTime + 45;
 
                     // Plot the polyline on the map
                     OverviewPolyline overviewPolyline = shortestRoute.getOverviewPolyline();
@@ -359,10 +391,12 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                     int paddingBottom = cardView.getHeight();
                     int paddingSides = Utilities.dpToPx(48);
 
-                    map.setPadding(0,0,0,paddingBottom);
+                    map.setPadding(0, 0, 0, paddingBottom);
 
-                    CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds,paddingSides);
+                    CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds, paddingSides);
                     map.animateCamera(update);
+
+                    getLoaderManager().restartLoader(COUNTER_LOADER_ID, null, DetailsActivityFragment.this);
 
                     runCardViewAnimation();
                 }
@@ -387,7 +421,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         return mLastLocation;
     }
 
-    private void runCardViewAnimation(){
+    private void runCardViewAnimation() {
         cardView.setTranslationY(cardView.getHeight());
         cardView.setVisibility(View.VISIBLE);
         cardView.animate()
@@ -467,5 +501,50 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     public void onMapReady(GoogleMap googleMap) {
         Toast.makeText(getActivity(), "Map is ready", Toast.LENGTH_SHORT).show();
         map = googleMap;
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        if (id == FLIGHT_LOADER_ID) {
+            return new CursorLoader(getActivity(),
+                    FlightEntry.getFlightUri(carrier_id),
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+
+        if (id == COUNTER_LOADER_ID) {
+            return new CursorLoader(getActivity(),
+                    CounterEntry.buildCounterUri(carrier_id),
+                    null,
+                    null,
+                    null,
+                    CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME + " ASC"
+            );
+        }
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (loader.getId() == FLIGHT_LOADER_ID) {
+            updateDetailsView(data);
+            doMapStuff();
+        }
+        if (loader.getId() == COUNTER_LOADER_ID){
+            data.moveToFirst();
+            float avg_waiting_time = Float.parseFloat(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME)));
+            int number_of_people = Integer.parseInt(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_COUNT)));
+            int counter_number = Integer.parseInt(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_NUMBER)));
+            Log.d(TAG, "onLoadFinished: "+Integer.toString(counter_number));
+            tvEstimate.setText(String.format("%f hours" , (base_num_mins + (avg_waiting_time*number_of_people))/60));
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
     }
 }

@@ -40,12 +40,12 @@ public class DataProvider extends ContentProvider {
     static {
         sFlightWithCarrierBuilder = new SQLiteQueryBuilder();
         sFlightWithCarrierBuilder.setTables(
-                AirportEntry.TABLE_NAME + " INNER JOIN " + CarrierEntry.TABLE_NAME + " ON " +
+                AirportEntry.TABLE_NAME + " INNER JOIN " + CarrierEntry.TABLE_NAME + " ON (" +
                         AirportEntry.TABLE_NAME + "." + AirportEntry._ID + " = " +
                         CarrierEntry.TABLE_NAME + "." + CarrierEntry.COLUMN_AIRPORT_KEY +
-                        " INNER JOIN " + FlightEntry.TABLE_NAME + " ON " +
+                        ") INNER JOIN " + FlightEntry.TABLE_NAME + " ON (" +
                         CarrierEntry.TABLE_NAME + "." + CarrierEntry._ID + " = " +
-                        FlightEntry.TABLE_NAME + "." + FlightEntry.COLUMN_CARRIER_KEY
+                        FlightEntry.TABLE_NAME + "." + FlightEntry.COLUMN_CARRIER_KEY + ")"
         );
     }
 
@@ -204,7 +204,7 @@ public class DataProvider extends ContentProvider {
             case FLIGHT:
                 _id = mDatabase.insert(FlightEntry.TABLE_NAME, null, values);
                 if (_id > 0)
-                    returnUri = uri;
+                    returnUri = ContentUris.withAppendedId(uri,_id);
                 break;
         }
         getContext().getContentResolver().notifyChange(uri, null);
@@ -267,10 +267,11 @@ public class DataProvider extends ContentProvider {
 
     private Cursor getFlightWithCarrier(Uri uri, String[] projection, String sortOrder) {
         final int carrier_id = (int) ContentUris.parseId(uri);
-
+        Log.d(TAG, "getFlightWithCarrier: "+Integer.toString(carrier_id));
         final String selection = CarrierEntry.TABLE_NAME + "." + CarrierEntry._ID + " =? ";
         final String selectionArgs[] = new String[]{Integer.toString(carrier_id)};
-
+        String query = sFlightWithCarrierBuilder.buildQuery(projection,selection,selectionArgs,null,null,sortOrder,null);
+        Log.d(TAG, "getFlightWithCarrier: " + query);
         Cursor mCursor = sFlightWithCarrierBuilder.query(mHelper.getReadableDatabase(),
                 projection,
                 selection,
@@ -279,6 +280,7 @@ public class DataProvider extends ContentProvider {
                 null,
                 sortOrder
         );
+        Log.d(TAG, "getFlightWithCarrier: Data provider : " + mCursor.getCount());
         return mCursor;
     }
 

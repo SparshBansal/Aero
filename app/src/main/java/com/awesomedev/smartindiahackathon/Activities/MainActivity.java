@@ -71,6 +71,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @BindString(R.string.KEY_FLIGHT)
     String KEY_FLIGHT;
 
+
+
     // Database Reference for accessing firebase application
     private static DatabaseReference reference = null;
     private static FirebaseDatabase firebaseDatabase = null;
@@ -207,8 +209,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         // Check if carrier is in the database
                         final String carrierName = carrierSnapshot.getKey();
-                        int carrier_id = Utilities.getCarrierId(MainActivity.this, airport_id, carrierName);
 
+                        int carrier_id = Utilities.getCarrierId(MainActivity.this, airport_id, carrierName);
+                        if (carrierName.equals("Jet Airways") && airportName.equals("NSIT")){
+                            Log.d(TAG, "onDataChange: NSIT,JET AIRWAYS : " + carrier_id);
+                        }
                         // If not insert in the database
                         if (carrier_id == -1) {
                             ContentValues values = new ContentValues();
@@ -217,6 +222,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                             Uri returnUri = getContentResolver().insert(CarrierEntry.CONTENT_URI, values);
                             carrier_id = (int) ContentUris.parseId(returnUri);
+                            if (carrierName.equals("Jet Airways") && airportName.equals("NSIT")){
+                                Log.d(TAG, "onDataChange: NSIT,JET AIRWAYS , INSERT: " + carrier_id);
+                            }
                         }
 
                         for (DataSnapshot mSnapshot : carrierSnapshot.getChildren()) {
@@ -228,6 +236,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     Log.d(TAG, "onDataChange: " + flightDetails.getFlightNo());
                                 }
                                 for (FlightDetails flight : flights) {
+                                    if (flight.getFlightNo().equals("IX-202")){
+                                        Log.d(TAG, "onDataChange: flight IX-202 , Carrier : " + carrierName + " airport : " + airportName);
+                                    }
                                     ContentValues values = new ContentValues();
 
                                     values.put(FlightEntry.COLUMN_FLIGHT_NUMBER, flight.getFlightNo());
@@ -237,9 +248,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     values.put(FlightEntry.COLUMN_SOURCE, flight.getSource());
                                     values.put(FlightEntry.COLUMN_DESTINATION, flight.getDestination());
 
-                                    getContentResolver().insert(FlightEntry.CONTENT_URI, values);
+
+                                    final Uri uri = getContentResolver().insert(FlightEntry.CONTENT_URI, values);
+                                    final int _id = (int) ContentUris.parseId(uri);
+
+                                    if (carrierName.equals("Jet Airways") && airportName.equals("NSIT")){
+                                        Log.d(TAG, "onDataChange: NSIT,JET AIRWAYS , INSERT FLIGHT: " + _id);
+
+                                    }
                                 }
-                            } else if (mSnapshot.getKey().equals("carrier")) {
+                            }
+                            if (mSnapshot.getKey().equals("carrier")) {
                                 List<Counter> counters = new ArrayList<Counter>();
                                 for (DataSnapshot counterSnapshot : mSnapshot.getChildren()) {
                                     counters.add(counterSnapshot.getValue(Counter.class));
@@ -296,6 +315,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "None of the fields should be empty", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                Log.d(TAG, "onClick: Carrier Id : " + Integer.toString(carrier_id));
 
                 Intent intent = new Intent(this, DetailsActivity.class);
                 intent = intent.putExtra(KEY_AIRPORT, airport)

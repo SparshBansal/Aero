@@ -26,6 +26,10 @@ public class DetailsActivity extends AppCompatActivity {
     @BindString(R.string.KEY_FLIGHT)
     String KEY_FLIGHT;
 
+
+    private static final String KEY_AIRPORT_ID = "AIRPORT_ID";
+    private static final String KEY_CARRIER_ID = "CARRIER_ID";
+
     Fragment detailsFragment = null;
 
     @Override
@@ -50,6 +54,9 @@ public class DetailsActivity extends AppCompatActivity {
         args.putString(KEY_AIRPORT,getIntent().getStringExtra(KEY_AIRPORT));
         args.putString(KEY_CARRIER,getIntent().getStringExtra(KEY_CARRIER));
         args.putString(KEY_FLIGHT,getIntent().getStringExtra(KEY_FLIGHT));
+
+        args.putInt(KEY_AIRPORT_ID,getIntent().getIntExtra(KEY_AIRPORT_ID,0));
+        args.putInt(KEY_CARRIER_ID,getIntent().getIntExtra(KEY_CARRIER_ID,0));
 
         detailsFragment = new DetailsActivityFragment();
         detailsFragment.setArguments(args);

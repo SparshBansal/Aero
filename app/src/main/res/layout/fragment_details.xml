@@ -24,10 +24,12 @@
         <!--Flight Details cardview-->
         <android.support.v7.widget.CardView
             android:id="@+id/cv_flight_details_view"
-            android:visibility="invisible"
-            android:layout_alignParentBottom="true"
+            android:layout_margin="4dp"
+
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:visibility="visible">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -38,8 +40,6 @@
                     android:id="@+id/rl_cv_header_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="#2196F3"
-                    android:paddingBottom="8dp"
                     android:paddingLeft="16dp"
                     android:paddingTop="8dp">
 
@@ -67,145 +67,119 @@
                     android:layout_height="wrap_content"
                     android:padding="16dp">
 
+
+                    <!--"Departing from India" view -->
                     <LinearLayout
-                        android:id="@+id/ll_departview"
+                        android:id="@+id/ll_sourceview"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="horizontal">
 
-                        <!--"Departing from India" view -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal">
+                            android:text="Departing From:"
+                            android:textSize="18sp" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Departing From:"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:id="@+id/tv_depart_location_view"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginLeft="4dp"
-                                android:text="India"
-                                android:textSize="18sp" />
-                        </LinearLayout>
-
-                        <!--"IND + Time and Gate view-->
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:id="@+id/tv_source"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:orientation="horizontal">
+                            android:layout_marginLeft="4dp"
+                            android:text="India"
+                            android:textSize="18sp" />
+                    </LinearLayout>
 
-                            <TextView
-                                android:id="@+id/tv_depart_code_view"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="IND"
-                                android:textSize="20sp" />
+                    <LinearLayout
+                        android:id="@+id/ll_timeview"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/ll_sourceview"
+                        android:orientation="horizontal">
 
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginLeft="16dp"
-                                android:layout_marginTop="4dp"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Leaving at "
+                            android:textSize="18sp" />
 
-                                <TextView
-                                    android:id="@+id/tv_depart_time_view"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="0dp"
-                                    android:layout_weight="1"
-                                    android:text="7:09pm(sched. 5:20pm)" />
+                        <TextView
+                            android:id="@+id/tv_departure_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2:30 PM"
+                            android:textSize="18sp" />
 
-                                <TextView
-                                    android:id="@+id/tv_depart_terminal_gate_view"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="0dp"
-                                    android:layout_weight="1"
-                                    android:text="Terminal 4, Gate 6" />
-                            </LinearLayout>
-                        </LinearLayout>
+                    </LinearLayout>
 
+
+                    <!--"Departing from India" view -->
+                    <LinearLayout
+                        android:id="@+id/ll_destinationview"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/ll_timeview"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Arriving At:"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/tv_destination"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="4dp"
+                            android:text="Taipei"
+                            android:textSize="18sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/ll_delayedview"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/ll_destinationview"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Delayed : "
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/tv_delayedView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="No"
+                            android:textSize="18sp" />
 
                     </LinearLayout>
 
                     <LinearLayout
-                        android:id="@+id/ll_arriveview"
+                        android:id="@+id/ll_estimateView"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_below="@id/ll_departview"
-                        android:layout_marginTop="20dp"
-                        android:orientation="vertical">
+                        android:layout_below="@id/ll_delayedview"
+                        android:orientation="horizontal">
 
-                        <!--"Departing from India" view -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal">
+                            android:text="Estimated Time to Reach : "
+                            android:textSize="18sp" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Arriving At:"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:id="@+id/tv_arrive_location_view"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginLeft="4dp"
-                                android:text="Taipei"
-                                android:textSize="18sp" />
-                        </LinearLayout>
-
-                        <!--"IND + Time and Gate view-->
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:id="@+id/tv_estimateView"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:id="@+id/tv_arrive_code_view"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="TPE"
-                                android:textSize="20sp" />
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginLeft="16dp"
-                                android:layout_marginTop="4dp"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:id="@+id/tv_arrive_time_view"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="0dp"
-                                    android:layout_weight="1"
-                                    android:text="10:20pm(sched. 5:20pm)" />
-
-                                <TextView
-                                    android:id="@+id/tv_arrive_terminal_gate_view"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="0dp"
-                                    android:layout_weight="1"
-                                    android:text="Terminal 2, Gate 8" />
-                            </LinearLayout>
-                        </LinearLayout>
-
+                            android:text="43 mins"
+                            android:textSize="18sp" />
 
                     </LinearLayout>
+
                 </RelativeLayout>
 
             </LinearLayout>
