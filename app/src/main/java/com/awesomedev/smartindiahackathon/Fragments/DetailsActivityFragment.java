@@ -145,6 +145,8 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     private static DatabaseReference reference = null;
     private static FirebaseDatabase firebaseDatabase = null;
 
+    private static ValueEventListener mListener = null;
+
     public DetailsActivityFragment() {
         super();
     }
@@ -172,7 +174,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         firebaseDatabase = FirebaseDatabase.getInstance();
         reference = firebaseDatabase.getReference(this.airport + "/" + this.carrier + "/carrier");
 
-        reference.addValueEventListener(new ValueEventListener() {
+        mListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 List<Counter> counters = new ArrayList<Counter>();
@@ -189,7 +191,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                     values.put(CounterEntry.COLUMN_COUNTER_THROUGHPUT, counter.getThroughput());
                     values.put(CounterEntry.COLUMN_COUNTER_COUNT, counter.getCounterCount());
 
-                    getActivity().getContentResolver().insert(CounterEntry.CONTENT_URI, values);
+                    getContext().getContentResolver().insert(CounterEntry.CONTENT_URI, values);
                 }
             }
 
@@ -197,7 +199,8 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });
+        };
+        reference.addValueEventListener(mListener);
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -234,6 +237,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     public void onPause() {
         Log.d(TAG, "onPause: onPauseFragment is called");
         mapView.onPause();
+        reference.removeEventListener(mListener);
         super.onPause();
     }
 
@@ -330,7 +334,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         tvFlightNumber.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_FLIGHT_NUMBER)));
 
         final String departureTimeString = data.getString(data.getColumnIndex(FlightEntry.COLUMN_DEPARTURE_TIME));
-        final long timestamp= Long.parseLong(departureTimeString);
+        final long timestamp = Long.parseLong(departureTimeString);
 
         Date departureDatetime = new Date(timestamp);
         tvDepartureTime.setText(departureDatetime.toString());
@@ -396,7 +400,8 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                     CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds, paddingSides);
                     map.animateCamera(update);
 
-                    getLoaderManager().restartLoader(COUNTER_LOADER_ID, null, DetailsActivityFragment.this);
+                    if (getActivity() != null)
+                        getActivity().getSupportLoaderManager().restartLoader(COUNTER_LOADER_ID, null, DetailsActivityFragment.this);
 
                     runCardViewAnimation();
                 }
@@ -533,13 +538,15 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
             updateDetailsView(data);
             doMapStuff();
         }
-        if (loader.getId() == COUNTER_LOADER_ID){
-            data.moveToFirst();
-            float avg_waiting_time = Float.parseFloat(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME)));
-            int number_of_people = Integer.parseInt(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_COUNT)));
-            int counter_number = Integer.parseInt(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_NUMBER)));
-            Log.d(TAG, "onLoadFinished: "+Integer.toString(counter_number));
-            tvEstimate.setText(String.format("%f hours" , (base_num_mins + (avg_waiting_time*number_of_people))/60));
+        if (loader.getId() == COUNTER_LOADER_ID) {
+            if (this.isAdded()) {
+                data.moveToFirst();
+                float avg_waiting_time = Float.parseFloat(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME)));
+                int number_of_people = Integer.parseInt(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_COUNT)));
+                int counter_number = Integer.parseInt(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_NUMBER)));
+                Log.d(TAG, "onLoadFinished: " + Integer.toString(counter_number));
+                tvEstimate.setText(String.format("%f hours", (base_num_mins + (avg_waiting_time * number_of_people)) / 60));
+            }
         }
     }
 
