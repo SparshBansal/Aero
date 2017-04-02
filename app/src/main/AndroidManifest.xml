@@ -27,7 +27,7 @@
         <activity
             android:name=".Activities.DetailsActivity"
             android:label="@string/title_activity_details"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/MyTheme"></activity>
         <provider
             android:authorities="com.awesomedev.smartindiahackathon"
             android:name="com.awesomedev.smartindiahackathon.Data.DataProvider"
