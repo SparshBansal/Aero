@@ -56,6 +56,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -328,16 +330,29 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     private void updateDetailsView(Cursor data) {
         data.moveToFirst();
         tvAirport.setText(data.getString(data.getColumnIndex(AirportEntry.COLUMN_AIRPORT_NAME)));
+        tvFlightNumber.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_FLIGHT_NUMBER)));
+
         tvSource.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_SOURCE)));
         tvDestination.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_DESTINATION)));
-        tvDelayed.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_DELAYED)));
-        tvFlightNumber.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_FLIGHT_NUMBER)));
+
+        final long delayed = Long.parseLong(data.getString(data.getColumnIndex(FlightEntry.COLUMN_DELAYED)));
+
+        if (delayed == 0)
+            tvDelayed.setText("Flight is on time");
+        else
+            tvDelayed.setText(Utilities.calculateTime(delayed));
 
         final String departureTimeString = data.getString(data.getColumnIndex(FlightEntry.COLUMN_DEPARTURE_TIME));
         final long timestamp = Long.parseLong(departureTimeString);
 
         Date departureDatetime = new Date(timestamp);
-        tvDepartureTime.setText(departureDatetime.toString());
+        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        DateFormat timeFormat = new SimpleDateFormat("HH:mm a");
+
+        String formattedDepartureDate = dateFormat.format(departureDatetime);
+        String formattedDepartureTime = timeFormat.format(departureDatetime);
+
+        tvDepartureTime.setText("on " + formattedDepartureDate + " at " + formattedDepartureTime);
     }
 
 

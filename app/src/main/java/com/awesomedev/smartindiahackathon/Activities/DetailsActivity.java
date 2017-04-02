@@ -55,6 +55,7 @@ public class DetailsActivity extends AppCompatActivity {
 
         if (toolbar!=null){
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("Navigation and Flight Details");
             toolbar.setNavigationIcon(R.mipmap.ic_menu_black_24dp);
             toolbar.setNavigationOnClickListener(new View.OnClickListener() {
                 @Override

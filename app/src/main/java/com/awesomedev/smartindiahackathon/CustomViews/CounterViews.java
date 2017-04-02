@@ -52,7 +52,7 @@ public class CounterViews extends View {
 
         paint = new Paint();
         paint.setColor(Color.WHITE);
-        paint.setTextSize(16);
+        paint.setTextSize(32);
         paint.setTextAlign(Paint.Align.CENTER);
     }
 
@@ -105,13 +105,13 @@ public class CounterViews extends View {
         int width = getWidth() - left - right;
 
         Bitmap counter = BitmapFactory.decodeResource(getResources(), R.drawable.counter);
-        Bitmap scaledCounter = Bitmap.createScaledBitmap(counter,60,60,false);
+        Bitmap scaledCounter = Bitmap.createScaledBitmap(counter,150,150,false);
 
         Bitmap person = BitmapFactory.decodeResource(getResources(), R.drawable.person);
-        Bitmap scaledPerson = Bitmap.createScaledBitmap(person,30,30,false);
+        Bitmap scaledPerson = Bitmap.createScaledBitmap(person,100,100,false);
 
         Bitmap clock = BitmapFactory.decodeResource(getResources(),R.drawable.clock);
-        Bitmap scaledClock = Bitmap.createScaledBitmap(clock, 50 , 50 , false);
+        Bitmap scaledClock = Bitmap.createScaledBitmap(clock, 80 , 80 , false);
 
         int xInc = width/mList.size() + 10;
 
