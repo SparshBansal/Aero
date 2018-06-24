@@ -5,37 +5,31 @@ package com.awesomedev.smartindiahackathon.Models;
  */
 
 public class Counter {
-    String counterCount,counterNumber,throughput,avgWaitingTime;
+    int counterCount;
+    int counterNumber;
+    double throughput;
 
-    public String getCounterCount() {
+    public int getCounterCount() {
         return counterCount;
     }
 
-    public String getCounterNumber() {
-        return counterNumber;
-    }
-
-    public String getThroughput() {
-        return throughput;
-    }
-
-    public String getAvgWaitingTime() {
-        return avgWaitingTime;
-    }
-
-    public void setCounterCount(String counterCount) {
+    public void setCounterCount(int counterCount) {
         this.counterCount = counterCount;
     }
 
-    public void setCounterNumber(String counterNumber) {
+    public int getCounterNumber() {
+        return counterNumber;
+    }
+
+    public void setCounterNumber(int counterNumber) {
         this.counterNumber = counterNumber;
     }
 
-    public void setThroughput(String throughput) {
-        this.throughput = throughput;
+    public double getThroughput() {
+        return throughput;
     }
 
-    public void setAvgWaitingTime(String avgWaitingTime) {
-        this.avgWaitingTime = avgWaitingTime;
+    public void setThroughput(double throughput) {
+        this.throughput = throughput;
     }
 }

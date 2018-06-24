@@ -1,45 +1,67 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    signingConfigs {
+        config {
+            keyAlias 'debug.keystore'
+            keyPassword 'android'
+            storeFile file('/home/sparsh/.android/debug.keystore')
+            storePassword 'android'
+        }
+    }
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
     defaultConfig {
         applicationId "com.awesomedev.smartindiahackathon"
-        minSdkVersion 21
-        targetSdkVersion 25
+        minSdkVersion 22
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        signingConfig signingConfigs.config
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        debug {
+            signingConfig signingConfigs.config
+        }
+    }
+    productFlavors {
     }
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    compile 'com.android.support:appcompat-v7:25.1.1'
-    compile 'com.squareup.retrofit2:retrofit:2.2.0'
-    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
-    compile 'com.jakewharton:butterknife:8.5.1'
-    compile 'com.android.support:design:25.1.1'
-    compile 'com.weiwangcn.betterspinner:library-material:1.1.0'
-    compile 'com.android.support:cardview-v7:25.1.1'
-    compile 'com.google.firebase:firebase-database:10.2.0'
-    compile 'com.google.android.gms:play-services-maps:10.2.0'
-    compile 'com.google.android.gms:play-services:10.2.0'
-    compile 'com.android.support:support-v4:25.1.1'
-    testCompile 'junit:junit:4.12'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:8.5.1'
+    // Support Libraries , Design Libraries
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.1'
+    implementation 'com.android.support:design:27.1.1'
+    implementation 'com.android.support:support-v4:27.1.1'
+    implementation 'com.github.esafirm.android-image-picker:imagepicker:1.13.0'
+    // Play Services for Sign In and Maps dependencies
+    implementation 'com.google.android.gms:play-services-auth:15.0.1'
+    implementation 'com.google.android.gms:play-services-location:15.0.1'
+    implementation 'com.google.android.gms:play-services-places:15.0.1'
+    implementation 'com.google.maps.android:android-maps-utils:0.5+'
+    implementation 'com.google.firebase:firebase-database:16.0.1'
+    implementation 'com.google.firebase:firebase-core:16.0.1'
+    // Butterknife Library
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+    implementation 'com.jakewharton:butterknife:8.8.1'
+    // Retrofit Library
+    implementation 'com.squareup.retrofit2:retrofit:2.4.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.1.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.4.1'
+    // Gson Serializer
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.android.support:cardview-v7:27.1.1'
+    implementation 'com.otaliastudios:bottomsheetcoordinatorlayout:1.0.4'
+    // Circular image view
+    implementation 'de.hdodenhof:circleimageview:2.2.0'
+    implementation 'com.weiwangcn.betterspinner:library-material:1.1.0'
 }
-
-
 
 apply plugin: 'com.google.gms.google-services'

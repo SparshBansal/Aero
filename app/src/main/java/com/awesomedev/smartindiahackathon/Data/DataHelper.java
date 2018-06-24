@@ -60,7 +60,7 @@ public class DataHelper extends SQLiteOpenHelper{
                 FlightEntry.COLUMN_DEPARTURE_TIME + " TEXT," +
                 FlightEntry.COLUMN_DELAYED + " TEXT , " +
                 "FOREIGN KEY (" + FlightEntry.COLUMN_CARRIER_KEY + " ) REFERENCES "+
-                CarrierEntry.TABLE_NAME + " ( " + CarrierEntry._ID + " ) " +
+                CarrierEntry.TABLE_NAME + " ( " + CarrierEntry._ID + " ), " +
                 "UNIQUE ("+ FlightEntry.COLUMN_FLIGHT_NUMBER + ") ON CONFLICT REPLACE);";
 
 

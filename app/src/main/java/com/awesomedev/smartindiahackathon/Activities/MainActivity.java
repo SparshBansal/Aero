@@ -35,6 +35,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     String KEY_FLIGHT;
 
 
-
     // Database Reference for accessing firebase application
     private static DatabaseReference reference = null;
     private static FirebaseDatabase firebaseDatabase = null;
@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private static final String KEY_AIRPORT_ID = "AIRPORT_ID";
     private static final String KEY_CARRIER_ID = "CARRIER_ID";
+    private static final String KEY_FLIGHT_ID = "FLIGHT_ID";
 
 
     private Cursor airportCursor = null;
@@ -193,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     // Check if the airport is already in the database
                     int airport_id = Utilities.getAirportId(MainActivity.this, airportName);
-
+                    Log.d(TAG, "onDataChange: " + airportName);
                     // If not insert in the database
                     if (airport_id == -1) {
 
@@ -202,18 +203,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         Uri returnUri = getContentResolver().insert(AirportEntry.CONTENT_URI, values);
                         airport_id = (int) ContentUris.parseId(returnUri);
-                        Log.d(TAG, "onDataChange: Airport Id : " + airport_id);
                     }
 
                     for (DataSnapshot carrierSnapshot : airportSnapshot.getChildren()) {
 
                         // Check if carrier is in the database
                         final String carrierName = carrierSnapshot.getKey();
-
+                        Toast.makeText(MainActivity.this, carrierName, Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "onDataChange: " + carrierName);
                         int carrier_id = Utilities.getCarrierId(MainActivity.this, airport_id, carrierName);
-                        if (carrierName.equals("Jet Airways") && airportName.equals("NSIT")){
-                            Log.d(TAG, "onDataChange: NSIT,JET AIRWAYS : " + carrier_id);
-                        }
                         // If not insert in the database
                         if (carrier_id == -1) {
                             ContentValues values = new ContentValues();
@@ -222,9 +220,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                             Uri returnUri = getContentResolver().insert(CarrierEntry.CONTENT_URI, values);
                             carrier_id = (int) ContentUris.parseId(returnUri);
-                            if (carrierName.equals("Jet Airways") && airportName.equals("NSIT")){
-                                Log.d(TAG, "onDataChange: NSIT,JET AIRWAYS , INSERT: " + carrier_id);
-                            }
                         }
 
                         for (DataSnapshot mSnapshot : carrierSnapshot.getChildren()) {
@@ -233,12 +228,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 for (DataSnapshot flight : mSnapshot.getChildren()) {
                                     FlightDetails flightDetails = flight.getValue(FlightDetails.class);
                                     flights.add(flightDetails);
-                                    Log.d(TAG, "onDataChange: " + flightDetails.getFlightNo());
                                 }
                                 for (FlightDetails flight : flights) {
-                                    if (flight.getFlightNo().equals("IX-202")){
-                                        Log.d(TAG, "onDataChange: flight IX-202 , Carrier : " + carrierName + " airport : " + airportName);
-                                    }
                                     ContentValues values = new ContentValues();
 
                                     values.put(FlightEntry.COLUMN_FLIGHT_NUMBER, flight.getFlightNo());
@@ -252,16 +243,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     final Uri uri = getContentResolver().insert(FlightEntry.CONTENT_URI, values);
                                     final int _id = (int) ContentUris.parseId(uri);
 
-                                    if (carrierName.equals("Jet Airways") && airportName.equals("NSIT")){
-                                        Log.d(TAG, "onDataChange: NSIT,JET AIRWAYS , INSERT FLIGHT: " + _id);
-
-                                    }
                                 }
                             }
                             if (mSnapshot.getKey().equals("carrier")) {
-                                List<Counter> counters = new ArrayList<Counter>();
+                                List<Counter> counters = new ArrayList<>();
                                 for (DataSnapshot counterSnapshot : mSnapshot.getChildren()) {
-                                    counters.add(counterSnapshot.getValue(Counter.class));
+                                    Counter counter = counterSnapshot.getValue(Counter.class);
+                                    counters.add(counter);
                                 }
                                 for (Counter counter : counters) {
                                     ContentValues values = new ContentValues();
@@ -269,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     values.put(CounterEntry.COLUMN_COUNTER_COUNT, counter.getCounterCount());
                                     values.put(CounterEntry.COLUMN_COUNTER_NUMBER, counter.getCounterNumber());
                                     values.put(CounterEntry.COLUMN_COUNTER_THROUGHPUT, counter.getThroughput());
-                                    values.put(CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME, counter.getAvgWaitingTime());
+                                    values.put(CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME, counter.getThroughput() * counter.getCounterCount());
 
                                     getContentResolver().insert(CounterEntry.CONTENT_URI, values);
                                 }
@@ -306,6 +294,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 final int airport_id = airportCursor.getInt(airportCursor.getColumnIndex(AirportEntry._ID));
                 final int carrier_id = carrierCursor.getInt(carrierCursor.getColumnIndex(CarrierEntry._ID));
+                final int flight_id = flightCursor.getInt(flightCursor.getColumnIndex(FlightEntry._ID));
 
                 Log.d(TAG, "onClick: airport : " + airport);
                 Log.d(TAG, "onClick: carrier : " + carrier);
@@ -323,7 +312,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         .putExtra(KEY_CARRIER, carrier)
                         .putExtra(KEY_FLIGHT, flightNumber)
                         .putExtra(KEY_AIRPORT_ID, airport_id)
-                        .putExtra(KEY_CARRIER_ID, carrier_id);
+                        .putExtra(KEY_CARRIER_ID, carrier_id)
+                        .putExtra(KEY_FLIGHT_ID, flight_id);
                 startActivity(intent);
 
                 break;

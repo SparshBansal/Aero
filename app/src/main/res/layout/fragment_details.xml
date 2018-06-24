@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_details"
     android:layout_width="match_parent"
@@ -9,183 +10,20 @@
     tools:context="com.awesomedev.smartindiahackathon.Fragments.DetailsActivityFragment">
 
 
-    <RelativeLayout
+    <!-- Google Map view  -->
+    <com.google.android.gms.maps.MapView
+        android:id="@+id/mv_mapview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent" />
 
-        <!-- Google Map view  -->
-        <com.google.android.gms.maps.MapView
-            android:id="@+id/mv_mapview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+    <include layout="@layout/bottom_sheet_details_fragment" />
 
-
-        <!--Flight Details cardview-->
-        <android.support.v7.widget.CardView
-            android:id="@+id/cv_flight_details_view"
-            android:layout_margin="4dp"
-
-
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:visibility="invisible">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <RelativeLayout
-                    android:id="@+id/rl_cv_header_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="16dp"
-                    android:paddingTop="8dp">
-
-                    <TextView
-                        android:id="@+id/tv_airport"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="sans-serif"
-                        android:text="IGI Airport"
-                        android:textSize="24sp" />
-
-
-                    <TextView
-                        android:id="@+id/tv_flightNumber"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/tv_airport"
-                        android:text="F3200"
-                        android:textSize="16sp" />
-                </RelativeLayout>
-
-                <RelativeLayout
-                    android:id="@+id/rl_cv_content_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="16dp">
-
-
-                    <!--"Departing from India" view -->
-                    <LinearLayout
-                        android:id="@+id/ll_sourceview"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Departing From:"
-                            android:textSize="18sp" />
-
-                        <TextView
-                            android:id="@+id/tv_source"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="4dp"
-                            android:text="India"
-                            android:textSize="18sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/ll_timeview"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/ll_sourceview"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Leaving at "
-                            android:textSize="18sp" />
-
-                        <TextView
-                            android:id="@+id/tv_departure_time"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="2:30 PM"
-                            android:textSize="18sp" />
-
-                    </LinearLayout>
-
-
-                    <!--"Departing from India" view -->
-                    <LinearLayout
-                        android:id="@+id/ll_destinationview"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/ll_timeview"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Arriving At:"
-                            android:textSize="18sp" />
-
-                        <TextView
-                            android:id="@+id/tv_destination"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="4dp"
-                            android:text="Taipei"
-                            android:textSize="18sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/ll_delayedview"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/ll_destinationview"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Delayed : "
-                            android:textSize="18sp" />
-
-                        <TextView
-                            android:id="@+id/tv_delayedView"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="No"
-                            android:textSize="18sp" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/ll_estimateView"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/ll_delayedview"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Estimated Time to Reach : "
-                            android:textSize="18sp" />
-
-                        <TextView
-                            android:id="@+id/tv_estimateView"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="43 mins"
-                            android:textSize="18sp" />
-
-                    </LinearLayout>
-
-                </RelativeLayout>
-
-            </LinearLayout>
-
-        </android.support.v7.widget.CardView>
-    </RelativeLayout>
-
-</LinearLayout>
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_navigation"
+        android:layout_margin="32dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        app:layout_anchor="@id/cv_bottom_sheet_view"
+        android:src="@drawable/ic_flight_black"
+        app:layout_anchorGravity="end|top"/>
+</android.support.design.widget.CoordinatorLayout>

@@ -18,7 +18,6 @@ import com.awesomedev.smartindiahackathon.CustomViews.CounterViews;
 import com.awesomedev.smartindiahackathon.Data.DatabaseContract;
 import com.awesomedev.smartindiahackathon.Models.Counter;
 import com.awesomedev.smartindiahackathon.R;
-import com.google.android.gms.identity.intents.model.CountrySpecification;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -112,7 +111,7 @@ public class CounterFragment extends Fragment implements LoaderManager.LoaderCal
                     ContentValues values = new ContentValues();
                     values.put(DatabaseContract.CounterEntry.COLUMN_CARRIER_KEY, carrier_id);
 
-                    values.put(DatabaseContract.CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME, counter.getAvgWaitingTime());
+                    values.put(DatabaseContract.CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME, counter.getThroughput()*counter.getCounterCount());
                     values.put(DatabaseContract.CounterEntry.COLUMN_COUNTER_NUMBER, counter.getCounterNumber());
                     values.put(DatabaseContract.CounterEntry.COLUMN_COUNTER_THROUGHPUT, counter.getThroughput());
                     values.put(DatabaseContract.CounterEntry.COLUMN_COUNTER_COUNT, counter.getCounterCount());
@@ -156,7 +155,7 @@ public class CounterFragment extends Fragment implements LoaderManager.LoaderCal
             String currentMini = data.getString(data.getColumnIndex(DatabaseContract.CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME));
             String counterMini = data.getString(data.getColumnIndex(DatabaseContract.CounterEntry.COLUMN_COUNTER_NUMBER));
 
-            if (Integer.parseInt(currentMini) < Integer.parseInt(mini))
+            if (Float.parseFloat(currentMini) < Float.parseFloat(mini))
                 counter = counterMini;
         }
 

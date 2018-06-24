@@ -1,6 +1,8 @@
 package com.awesomedev.smartindiahackathon.Fragments;
 
+import android.Manifest;
 import android.animation.Animator;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
@@ -13,6 +15,8 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -27,9 +31,9 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.awesomedev.smartindiahackathon.Data.DatabaseContract;
+import com.awesomedev.smartindiahackathon.Activities.DetailsActivity;
+import com.awesomedev.smartindiahackathon.Activities.MainActivity;
 import com.awesomedev.smartindiahackathon.Models.Counter;
-import com.awesomedev.smartindiahackathon.Models.FlightDetails;
 import com.awesomedev.smartindiahackathon.Models.Route.Legs;
 import com.awesomedev.smartindiahackathon.Models.Route.OverviewPolyline;
 import com.awesomedev.smartindiahackathon.Models.Route.RouteDirections;
@@ -39,6 +43,7 @@ import com.awesomedev.smartindiahackathon.Util.RetrofitHelper;
 import com.awesomedev.smartindiahackathon.Util.Utilities;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -49,7 +54,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.vision.text.Text;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -69,7 +74,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.*;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.AirportEntry;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.CounterEntry;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.FlightEntry;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -80,6 +87,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
 
     private static final String TAG = DetailsActivityFragment.class.getSimpleName();
+
 
     @BindString(R.string.KEY_AIRPORT)
     String KEY_AIRPORT;
@@ -96,8 +104,8 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     @BindView(R.id.mv_mapview)
     MapView mapView;
 
-    @BindView(R.id.cv_flight_details_view)
-    CardView cardView;
+    @BindView(R.id.ll_bottom_sheet_view)
+    View cvBottomSheetView;
 
     @BindView(R.id.tv_airport)
     TextView tvAirport;
@@ -111,14 +119,15 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     @BindView(R.id.tv_destination)
     TextView tvDestination;
 
-    @BindView(R.id.tv_delayedView)
-    TextView tvDelayed;
 
     @BindView(R.id.tv_departure_time)
     TextView tvDepartureTime;
 
-    @BindView(R.id.tv_estimateView)
+    @BindView(R.id.tv_estimate_view)
     TextView tvEstimate;
+
+    @BindView(R.id.fab_navigation)
+    FloatingActionButton fabNavigation;
 
     private GoogleMap map = null;
 
@@ -126,20 +135,19 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     private String carrier = null;
     private String flight = null;
 
-    private int carrier_id;
-
-    private static boolean isAnimating = false;
+    private int carrier_id, flight_id;
 
 
     private static final String KEY_AIRPORT_ID = "AIRPORT_ID";
     private static final String KEY_CARRIER_ID = "CARRIER_ID";
+    private static final String KEY_FLIGHT_ID = "FLIGHT_ID";
 
     private static final int FLIGHT_LOADER_ID = 10;
     private static final int COUNTER_LOADER_ID = 11;
 
     /*Constants*/
-    private static final int REQUEST_PERMISSION = 100;
     private static final int REQUEST_RESOLVE_ERROR = 101;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
     private static float base_num_mins = 0;
 
@@ -148,6 +156,8 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     private static FirebaseDatabase firebaseDatabase = null;
 
     private static ValueEventListener mListener = null;
+
+    private static BottomSheetBehavior bottomSheetBehavior = null;
 
     public DetailsActivityFragment() {
         super();
@@ -160,8 +170,11 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         View rootView = inflater.inflate(R.layout.fragment_details, container, false);
         ButterKnife.bind(this, rootView);
 
+        bottomSheetBehavior = BottomSheetBehavior.from(cvBottomSheetView);
+        bottomSheetBehavior.setPeekHeight(300);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
         Log.d(TAG, "onCreateView: onCreateFragment Called");
-        buildApi();
 
         Bundle args = getArguments();
 
@@ -172,6 +185,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
         // Get the flight details asynchronously
         this.carrier_id = args.getInt(KEY_CARRIER_ID);
+        this.flight_id = args.getInt(KEY_FLIGHT_ID);
 
         firebaseDatabase = FirebaseDatabase.getInstance();
         reference = firebaseDatabase.getReference(this.airport + "/" + this.carrier + "/carrier");
@@ -188,7 +202,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                     ContentValues values = new ContentValues();
                     values.put(CounterEntry.COLUMN_CARRIER_KEY, carrier_id);
 
-                    values.put(CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME, counter.getAvgWaitingTime());
+                    values.put(CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME, counter.getThroughput() * counter.getCounterCount());
                     values.put(CounterEntry.COLUMN_COUNTER_NUMBER, counter.getCounterNumber());
                     values.put(CounterEntry.COLUMN_COUNTER_THROUGHPUT, counter.getThroughput());
                     values.put(CounterEntry.COLUMN_COUNTER_COUNT, counter.getCounterCount());
@@ -204,26 +218,31 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         };
         reference.addValueEventListener(mListener);
 
-        mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(this);
-
-
-        return rootView;
-    }
-
-    void buildApi() {
         mClient = new GoogleApiClient.Builder(getActivity())
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .build();
+
+        mapView.onCreate(savedInstanceState);
+        mapView.getMapAsync(this);
+
+        fabNavigation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                doMapStuff();
+            }
+        });
+
+        return rootView;
     }
+
 
     @Override
     public void onStart() {
         Log.d(TAG, "onStart: onStartFragment is called");
         mapView.onStart();
-        mClient.connect();
         super.onStart();
     }
 
@@ -239,7 +258,6 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     public void onPause() {
         Log.d(TAG, "onPause: onPauseFragment is called");
         mapView.onPause();
-        reference.removeEventListener(mListener);
         super.onPause();
     }
 
@@ -287,13 +305,18 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         }
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_PERMISSION) {
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                    grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                if (!map.isMyLocationEnabled())
+                    map.setMyLocationEnabled(true);
                 doMapStuff();
             } else {
-                Toast.makeText(getActivity(), "Sorry , the application requires to Access your location", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Require location permission for finding navigation path", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -337,11 +360,6 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
         final long delayed = Long.parseLong(data.getString(data.getColumnIndex(FlightEntry.COLUMN_DELAYED)));
 
-        if (delayed == 0)
-            tvDelayed.setText("Flight is on time");
-        else
-            tvDelayed.setText(Utilities.calculateTime(delayed));
-
         final String departureTimeString = data.getString(data.getColumnIndex(FlightEntry.COLUMN_DEPARTURE_TIME));
         final long timestamp = Long.parseLong(departureTimeString);
 
@@ -353,127 +371,85 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         String formattedDepartureTime = timeFormat.format(departureDatetime);
 
         tvDepartureTime.setText("on " + formattedDepartureDate + " at " + formattedDepartureTime);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 
 
     private void doMapStuff() {
-        // Initialize for camera activities
-        MapsInitializer.initialize(getActivity());
-
         // Enable current location pointer
-        map.setMyLocationEnabled(true);
-
-        // Get the current location and zoom the camera towards it
-        Location currentLocation = getCurrentLocation(getActivity());
-        if (currentLocation != null) {
-
-            // Find the directions from the current location to the airport using
-            // Maps Directions API
-            String origin = Double.toString(currentLocation.getLatitude()) + "," + Double.toString(currentLocation.getLongitude());
-            String destination = this.airport.replace(' ', '+');
-            Log.d(TAG, "doMapStuff: " + "Map stuff called");
-            Call<RouteDirections> call = RetrofitHelper.getGoogleMapsServiceInstance().getDirections(origin, destination, API_KEY);
-            Log.d(TAG, "doMapStuff: " + call.request().url().toString());
-            call.enqueue(new Callback<RouteDirections>() {
-                @Override
-                public void onResponse(Call<RouteDirections> call, Response<RouteDirections> response) {
-                    Log.d(TAG, "onResponse: Response received");
-                    Log.d(TAG, "onResponse: " + call.request().url().toString());
-
-                    // Get the directions polylines and plot on the map
-                    RouteDirections directions = response.body();
-                    List<Routes> routes = directions.getRoutes();
-
-                    Routes shortestRoute = routes.get(0);
-                    Legs firstLeg = shortestRoute.getLegs().get(0);
-
-                    float estimatedTime = firstLeg.getDuration().getValue();
-                    float estimatedDistance = firstLeg.getDistance().getValue();
-
-                    base_num_mins = base_num_mins + estimatedTime + 45;
-
-                    // Plot the polyline on the map
-                    OverviewPolyline overviewPolyline = shortestRoute.getOverviewPolyline();
-                    plotPolyline(overviewPolyline);
-
-                    // Zoom out to the bounds
-                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
-
-                    LatLng northeast = shortestRoute.getBounds().getNortheast().getLatLng();
-                    LatLng southwest = shortestRoute.getBounds().getSouthwest().getLatLng();
-
-                    builder.include(northeast);
-                    builder.include(southwest);
-
-                    LatLngBounds bounds = builder.build();
-
-                    int paddingBottom = cardView.getHeight();
-                    int paddingSides = Utilities.dpToPx(48);
-
-                    map.setPadding(0, 0, 0, paddingBottom);
-
-                    CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds, paddingSides);
-                    map.animateCamera(update);
-
-                    if (getActivity() != null)
-                        getActivity().getSupportLoaderManager().restartLoader(COUNTER_LOADER_ID, null, DetailsActivityFragment.this);
-
-                    runCardViewAnimation();
-                }
-
-                @Override
-                public void onFailure(Call<RouteDirections> call, Throwable t) {
-                    Log.d(TAG, "onFailure: " + call.request().url().toString());
-                    Log.d(TAG, "onFailure: " + t.getMessage());
-                }
-            });
-        } else {
-            Log.d(TAG, "doMapStuff: " + "current location is null");
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            requestPermissions(new String[]{
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+            }, LOCATION_PERMISSION_REQUEST_CODE);
+            return;
         }
-    }
 
+        FusedLocationProviderClient locationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        locationProviderClient.getLastLocation().addOnSuccessListener(getActivity(), new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    // Find the directions from the current location to the airport using
+                    // Maps Directions API
+                    String origin = Double.toString(location.getLatitude()) + "," + Double.toString(location.getLongitude());
+                    String destination = DetailsActivityFragment.this.airport.replace(' ', '+');
+                    Call<RouteDirections> call = RetrofitHelper.getGoogleMapsServiceInstance().getDirections(origin, destination, API_KEY);
+                    call.enqueue(new Callback<RouteDirections>() {
+                        @Override
+                        public void onResponse(Call<RouteDirections> call, Response<RouteDirections> response) {
 
-    public Location getCurrentLocation(Context context) {
-        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mClient);
-        if (mLastLocation == null) {
-            Toast.makeText(context, "Last Location is null", Toast.LENGTH_SHORT).show();
-        }
-        return mLastLocation;
-    }
+                            // Get the directions polylines and plot on the map
+                            RouteDirections directions = response.body();
+                            List<Routes> routes = directions.getRoutes();
 
-    private void runCardViewAnimation() {
-        cardView.setTranslationY(cardView.getHeight());
-        cardView.setVisibility(View.VISIBLE);
-        cardView.animate()
-                .translationY(0)
-                .setInterpolator(new DecelerateInterpolator(1.5f))
-                .setDuration(800)
-                .setListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-                        isAnimating = true;
-                    }
+                            Routes shortestRoute = routes.get(0);
+                            Legs firstLeg = shortestRoute.getLegs().get(0);
 
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        isAnimating = false;
-                    }
+                            float estimatedTime = firstLeg.getDuration().getValue();
 
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-                        isAnimating = false;
-                    }
+                            base_num_mins = base_num_mins + estimatedTime + 45;
 
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
+                            // Plot the polyline on the map
+                            OverviewPolyline overviewPolyline = shortestRoute.getOverviewPolyline();
+                            plotPolyline(overviewPolyline);
 
-                    }
-                })
-                .start();
+                            // Zoom out to the bounds
+                            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+                            LatLng northeast = shortestRoute.getBounds().getNortheast().getLatLng();
+                            LatLng southwest = shortestRoute.getBounds().getSouthwest().getLatLng();
+
+                            builder.include(northeast);
+                            builder.include(southwest);
+
+                            map.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 8));
+
+                            if (getActivity() != null)
+                                getActivity().getSupportLoaderManager().restartLoader(COUNTER_LOADER_ID, null, DetailsActivityFragment.this);
+
+                        }
+
+                        @Override
+                        public void onFailure(Call<RouteDirections> call, Throwable t) {
+                            Log.d(TAG, "onFailure: " + call.request().url().toString());
+                            Log.d(TAG, "onFailure: " + t.getMessage());
+                        }
+                    });
+                }
+            }
+        });
     }
 
     private void plotPolyline(OverviewPolyline overviewPolyline) {
-        List<LatLng> points = decodePoly(overviewPolyline.getPoints());
+        List<LatLng> points = Utilities.decodePoly(overviewPolyline.getPoints());
         PolylineOptions lineOptions = new PolylineOptions();
 
         lineOptions.addAll(points);
@@ -483,44 +459,23 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         map.addPolyline(lineOptions);
     }
 
-    private List<LatLng> decodePoly(String encoded) {
-
-        List<LatLng> poly = new ArrayList<>();
-        int index = 0, len = encoded.length();
-        int lat = 0, lng = 0;
-
-        while (index < len) {
-            int b, shift = 0, result = 0;
-            do {
-                b = encoded.charAt(index++) - 63;
-                result |= (b & 0x1f) << shift;
-                shift += 5;
-            } while (b >= 0x20);
-            int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-            lat += dlat;
-
-            shift = 0;
-            result = 0;
-            do {
-                b = encoded.charAt(index++) - 63;
-                result |= (b & 0x1f) << shift;
-                shift += 5;
-            } while (b >= 0x20);
-            int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-            lng += dlng;
-
-            LatLng p = new LatLng((((double) lat / 1E5)),
-                    (((double) lng / 1E5)));
-            poly.add(p);
-        }
-
-        return poly;
-    }
-
     @Override
     public void onMapReady(GoogleMap googleMap) {
         Toast.makeText(getActivity(), "Map is ready", Toast.LENGTH_SHORT).show();
         map = googleMap;
+        mClient.connect();
+
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        map.setMyLocationEnabled(true);
     }
 
     @Override
@@ -553,6 +508,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
             updateDetailsView(data);
             doMapStuff();
         }
+
         if (loader.getId() == COUNTER_LOADER_ID) {
             if (this.isAdded()) {
                 data.moveToFirst();

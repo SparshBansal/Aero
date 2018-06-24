@@ -14,8 +14,8 @@
         android:theme="@style/MyTheme">
 
         <meta-data
-            android:name="com.google.android.maps.v2.API_KEY"
-            android:value="AIzaSyBd8bhS7jkvdT_bVy6wEw72x5P_szANT2s" />
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/API_KEY"/>
 
         <activity android:name=".Activities.MainActivity" android:theme="@style/AppTheme">
             <intent-filter>
@@ -27,12 +27,13 @@
         <activity
             android:name=".Activities.DetailsActivity"
             android:label="@string/title_activity_details"
-            android:theme="@style/MyTheme"></activity>
+            android:theme="@style/MyTheme" />
+
         <provider
             android:authorities="com.awesomedev.smartindiahackathon"
             android:name="com.awesomedev.smartindiahackathon.Data.DataProvider"
             android:exported="false"
-            android:syncable="true"></provider>
+            android:syncable="true" />
     </application>
 
 </manifest>
