@@ -38,8 +38,6 @@ import butterknife.ButterKnife;
 public class CounterFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
 
-    private static final String KEY_AIRPORT_ID = "AIRPORT_ID";
-    private static final String KEY_CARRIER_ID = "CARRIER_ID";
     private static final String TAG = CounterFragment.class.getSimpleName();
 
     CounterViews mView = null;
@@ -52,6 +50,12 @@ public class CounterFragment extends Fragment implements LoaderManager.LoaderCal
 
     @BindString(R.string.KEY_FLIGHT)
     String KEY_FLIGHT;
+
+    @BindString(R.string.KEY_CARRIER_ID)
+    String KEY_CARRIER_ID;
+
+    @BindString(R.string.KEY_AIRPORT_ID)
+    String KEY_AIRPORT_ID;
 
     @BindView(R.id.tv_moveCounter)
     TextView tvMoveCounter;

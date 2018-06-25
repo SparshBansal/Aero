@@ -9,7 +9,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -17,10 +16,8 @@ import android.widget.Toast;
 import com.awesomedev.smartindiahackathon.Fragments.CounterFragment;
 import com.awesomedev.smartindiahackathon.Fragments.DetailsActivityFragment;
 import com.awesomedev.smartindiahackathon.R;
-import com.google.android.gms.maps.model.LatLng;
 
 import butterknife.BindString;
-import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class DetailsActivity extends AppCompatActivity {
@@ -36,10 +33,14 @@ public class DetailsActivity extends AppCompatActivity {
     @BindString(R.string.KEY_FLIGHT)
     String KEY_FLIGHT;
 
+    @BindString(R.string.KEY_AIRPORT_ID)
+    String KEY_AIRPORT_ID;
 
+    @BindString(R.string.KEY_CARRIER_ID)
+    String KEY_CARRIER_ID;
 
-    private static final String KEY_AIRPORT_ID = "AIRPORT_ID";
-    private static final String KEY_CARRIER_ID = "CARRIER_ID";
+    @BindString(R.string.KEY_FLIGHT_ID)
+    String KEY_FLIGHT_ID;
 
     Fragment detailsFragment = null;
 
@@ -80,6 +81,7 @@ public class DetailsActivity extends AppCompatActivity {
 
         args.putInt(KEY_AIRPORT_ID,getIntent().getIntExtra(KEY_AIRPORT_ID,0));
         args.putInt(KEY_CARRIER_ID,getIntent().getIntExtra(KEY_CARRIER_ID,0));
+        args.putInt(KEY_FLIGHT_ID, getIntent().getIntExtra(KEY_FLIGHT_ID, 0));
 
         detailsFragment = new DetailsActivityFragment();
         detailsFragment.setArguments(args);
@@ -98,7 +100,6 @@ public class DetailsActivity extends AppCompatActivity {
                 //Check to see which item was being clicked and perform appropriate action
                 switch (menuItem.getItemId()){
 
-
                     //Replacing the main content with ContentFragment Which is our Inbox View;
                     case R.id.flight_details:
                         Bundle args = new Bundle();
@@ -110,6 +111,7 @@ public class DetailsActivity extends AppCompatActivity {
 
                         args.putInt(KEY_AIRPORT_ID,getIntent().getIntExtra(KEY_AIRPORT_ID,0));
                         args.putInt(KEY_CARRIER_ID,getIntent().getIntExtra(KEY_CARRIER_ID,0));
+                        args.putInt(KEY_FLIGHT_ID, getIntent().getIntExtra(KEY_FLIGHT_ID, 0));
 
                         detailsFragment = new DetailsActivityFragment();
                         detailsFragment.setArguments(args);
@@ -164,28 +166,16 @@ public class DetailsActivity extends AppCompatActivity {
 
         //calling sync state is necessay or else your hamburger icon wont show up
         actionBarDrawerToggle.syncState();
-
-
-        Log.d(TAG, "onCreate: onCreateActivity is called");
-
-        if (savedInstanceState == null)
-            Log.d(TAG, "onCreate: savedInstanceState is null");
-        else
-            Log.d(TAG, "onCreate: savedInstanceState is not null");
-
-
     }
 
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy: Activity Destroyed");
     }
 
     @Override
     public void onBackPressed() {
-        Log.d(TAG, "onBackPressed: ");
         super.onBackPressed();
     }
 }

@@ -1,30 +1,24 @@
 package com.awesomedev.smartindiahackathon.Activities;
 
-import android.app.ActionBar;
-import android.app.Activity;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.awesomedev.smartindiahackathon.Activities.DetailsActivity;
-import com.awesomedev.smartindiahackathon.Data.DatabaseContract;
 import com.awesomedev.smartindiahackathon.Models.Counter;
 import com.awesomedev.smartindiahackathon.Models.FlightDetails;
 import com.awesomedev.smartindiahackathon.R;
@@ -35,7 +29,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +37,15 @@ import butterknife.BindString;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.*;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.AirportEntry;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.CONTENT_AUTHORITY;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.CarrierEntry;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.CounterEntry;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.FlightEntry;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.PATH_AIRPORT;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.PATH_CARRIER;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.PATH_COUNTER;
+import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.PATH_FLIGHT;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -72,6 +73,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @BindString(R.string.KEY_FLIGHT)
     String KEY_FLIGHT;
 
+    @BindString(R.string.KEY_AIRPORT_ID)
+    String KEY_AIRPORT_ID;
+
+    @BindString(R.string.KEY_CARRIER_ID)
+    String KEY_CARRIER_ID;
+
+    @BindString(R.string.KEY_FLIGHT_ID)
+    String KEY_FLIGHT_ID;
 
     // Database Reference for accessing firebase application
     private static DatabaseReference reference = null;
@@ -82,14 +91,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int CARRIER_LOADER_ID = 101;
     private static final int FLIGHT_LOADER_ID = 102;
 
-    private static final String KEY_AIRPORT_ID = "AIRPORT_ID";
-    private static final String KEY_CARRIER_ID = "CARRIER_ID";
-    private static final String KEY_FLIGHT_ID = "FLIGHT_ID";
-
 
     private Cursor airportCursor = null;
     private Cursor carrierCursor = null;
     private Cursor flightCursor = null;
+
+    private static final int AIRPORT = 100;
+    private static final int CARRIER = 101;
+    private static final int COUNTER = 102;
+    private static final int CARRIER_WITH_AIRPORT = 103;
+    private static final int COUNTER_WITH_CARRIER = 104;
+    private static final int FLIGHT = 105;
+    private static final int FLIGHT_WITH_ID = 106;
+    private static final int FLIGHT_WITH_CARRIER = 107;
 
     CursorAdapter airportAdapter, carrierAdapter, flightAdapter;
 
@@ -194,7 +208,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     // Check if the airport is already in the database
                     int airport_id = Utilities.getAirportId(MainActivity.this, airportName);
-                    Log.d(TAG, "onDataChange: " + airportName);
                     // If not insert in the database
                     if (airport_id == -1) {
 
@@ -210,7 +223,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         // Check if carrier is in the database
                         final String carrierName = carrierSnapshot.getKey();
                         Toast.makeText(MainActivity.this, carrierName, Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, "onDataChange: " + carrierName);
                         int carrier_id = Utilities.getCarrierId(MainActivity.this, airport_id, carrierName);
                         // If not insert in the database
                         if (carrier_id == -1) {
@@ -296,16 +308,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 final int carrier_id = carrierCursor.getInt(carrierCursor.getColumnIndex(CarrierEntry._ID));
                 final int flight_id = flightCursor.getInt(flightCursor.getColumnIndex(FlightEntry._ID));
 
-                Log.d(TAG, "onClick: airport : " + airport);
-                Log.d(TAG, "onClick: carrier : " + carrier);
-                Log.d(TAG, "onClick: flight : " + flightNumber);
-
                 if (airport.equals("") || carrier.equals("") || flightNumber.equals("")) {
                     Toast.makeText(this, "None of the fields should be empty", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                Log.d(TAG, "onClick: Carrier Id : " + Integer.toString(carrier_id));
 
                 Intent intent = new Intent(this, DetailsActivity.class);
                 intent = intent.putExtra(KEY_AIRPORT, airport)
@@ -332,7 +339,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         if (id == CARRIER_LOADER_ID) {
             final int airport_id = args.getInt(KEY_AIRPORT_ID);
-            Uri uri = CarrierEntry.buildCarrierUri(airport_id);
+            Uri uri = CarrierEntry.buildCarrierWithAirportUri(airport_id);
             return new CursorLoader(this,
                     uri,
                     null,
@@ -344,7 +351,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (id == FLIGHT_LOADER_ID) {
             final int carrier_id = args.getInt(KEY_CARRIER_ID);
-            Uri uri = FlightEntry.getFlightUri(carrier_id);
+            Uri uri = FlightEntry.getFlightWithCarrierUri(carrier_id);
+
+            int matcher = buildUriMatcher().match(uri);
+
             return new CursorLoader(this,
                     uri,
                     null,
@@ -359,17 +369,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == AIRPORT_LOADER_ID) {
-            Log.d(TAG, "onLoadFinished: " + data.getCount());
             airportAdapter.swapCursor(data);
             airportAdapter.notifyDataSetChanged();
         }
         if (loader.getId() == CARRIER_LOADER_ID) {
-            Log.d(TAG, "onLoadFinished: Carrier Data count : " + data.getCount());
             carrierAdapter.swapCursor(data);
             carrierAdapter.notifyDataSetChanged();
         }
         if (loader.getId() == FLIGHT_LOADER_ID) {
-            Log.d(TAG, "onLoadFinished: Flight Data Count : " + data.getCount());
             flightAdapter.swapCursor(data);
             flightAdapter.notifyDataSetChanged();
         }
@@ -381,5 +388,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             this.airportCursor = null;
             airportAdapter.notifyDataSetChanged();
         }
+    }
+
+
+    private UriMatcher buildUriMatcher() {
+        UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
+
+        matcher.addURI(CONTENT_AUTHORITY, PATH_AIRPORT, AIRPORT);
+        matcher.addURI(CONTENT_AUTHORITY, PATH_CARRIER, CARRIER);
+        matcher.addURI(CONTENT_AUTHORITY, PATH_COUNTER, COUNTER);
+        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT, FLIGHT);
+
+        matcher.addURI(CONTENT_AUTHORITY, PATH_CARRIER + "/*", CARRIER_WITH_AIRPORT);
+        matcher.addURI(CONTENT_AUTHORITY, PATH_COUNTER + "/*", COUNTER_WITH_CARRIER);
+
+        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT + "/" + PATH_CARRIER + "/*", FLIGHT_WITH_CARRIER);
+        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT + "/*", FLIGHT_WITH_ID);
+        return matcher;
     }
 }

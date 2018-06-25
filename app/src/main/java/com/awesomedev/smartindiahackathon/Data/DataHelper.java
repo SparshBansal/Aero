@@ -15,7 +15,7 @@ import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.*;
 public class DataHelper extends SQLiteOpenHelper{
 
     public static final String DB_NAME = "database";
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 4;
 
     public DataHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -61,7 +61,7 @@ public class DataHelper extends SQLiteOpenHelper{
                 FlightEntry.COLUMN_DELAYED + " TEXT , " +
                 "FOREIGN KEY (" + FlightEntry.COLUMN_CARRIER_KEY + " ) REFERENCES "+
                 CarrierEntry.TABLE_NAME + " ( " + CarrierEntry._ID + " ), " +
-                "UNIQUE ("+ FlightEntry.COLUMN_FLIGHT_NUMBER + ") ON CONFLICT REPLACE);";
+                "UNIQUE ("+ FlightEntry.COLUMN_FLIGHT_NUMBER + "," + FlightEntry.COLUMN_CARRIER_KEY + ") ON CONFLICT REPLACE);";
 
 
         // Create the tables
@@ -76,10 +76,12 @@ public class DataHelper extends SQLiteOpenHelper{
         final String DROP_TABLE_AIRPORT = "DROP TABLE IF EXISTS " + AirportEntry.TABLE_NAME;
         final String DROP_TABLE_CARRIER = "DROP TABLE IF EXISTS " + CarrierEntry.TABLE_NAME;
         final String DROP_TABLE_COUNTER = "DROP TABLE IF EXISTS " + CounterEntry.TABLE_NAME;
+        final String DROP_FLIGHT_TABLE = "DROP TABLE IF EXISTS " + FlightEntry.TABLE_NAME;
 
         db.execSQL(DROP_TABLE_COUNTER);
         db.execSQL(DROP_TABLE_CARRIER);
         db.execSQL(DROP_TABLE_AIRPORT);
+        db.execSQL(DROP_FLIGHT_TABLE);
 
         onCreate(db);
     }

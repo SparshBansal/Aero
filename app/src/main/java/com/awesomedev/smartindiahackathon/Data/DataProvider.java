@@ -33,7 +33,8 @@ public class DataProvider extends ContentProvider {
     private static final int CARRIER_WITH_AIRPORT = 103;
     private static final int COUNTER_WITH_CARRIER = 104;
     private static final int FLIGHT = 105;
-    private static final int FLIGHT_WITH_CARRIER = 106;
+    private static final int FLIGHT_WITH_ID = 106;
+    private static final int FLIGHT_WITH_CARRIER = 107;
 
     private static SQLiteQueryBuilder sFlightWithCarrierBuilder = null;
 
@@ -87,6 +88,17 @@ public class DataProvider extends ContentProvider {
                 );
                 break;
 
+            case FLIGHT:
+                mCursor = mDatabase.query(FlightEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+
             case COUNTER:
                 mCursor = mDatabase.query(CounterEntry.TABLE_NAME,
                         projection,
@@ -129,11 +141,15 @@ public class DataProvider extends ContentProvider {
                 );
                 break;
 
-            case FLIGHT:
+            case FLIGHT_WITH_ID:
+                final long flight_id = ContentUris.parseId(uri);
+                final String selectionString = FlightEntry._ID + " = ?";
+                final String selectionArgsString[] = new String[]{Long.toString(flight_id)};
+
                 mCursor = mDatabase.query(FlightEntry.TABLE_NAME,
                         projection,
-                        selection,
-                        selectionArgs,
+                        selectionString,
+                        selectionArgsString,
                         null,
                         null,
                         sortOrder
@@ -168,8 +184,10 @@ public class DataProvider extends ContentProvider {
                 return CounterEntry.CONTENT_TYPE;
             case FLIGHT:
                 return FlightEntry.CONTENT_TYPE;
-            case FLIGHT_WITH_CARRIER:
+            case FLIGHT_WITH_ID:
                 return FlightEntry.CONTENT_ITEM_TYPE;
+            case FLIGHT_WITH_CARRIER:
+                return FlightEntry.CONTENT_TYPE;
             default:
                 return null;
         }
@@ -267,11 +285,9 @@ public class DataProvider extends ContentProvider {
 
     private Cursor getFlightWithCarrier(Uri uri, String[] projection, String sortOrder) {
         final int carrier_id = (int) ContentUris.parseId(uri);
-        Log.d(TAG, "getFlightWithCarrier: "+Integer.toString(carrier_id));
         final String selection = CarrierEntry.TABLE_NAME + "." + CarrierEntry._ID + " =? ";
         final String selectionArgs[] = new String[]{Integer.toString(carrier_id)};
         String query = sFlightWithCarrierBuilder.buildQuery(projection,selection,selectionArgs,null,null,sortOrder,null);
-        Log.d(TAG, "getFlightWithCarrier: " + query);
         Cursor mCursor = sFlightWithCarrierBuilder.query(mHelper.getReadableDatabase(),
                 projection,
                 selection,
@@ -280,7 +296,6 @@ public class DataProvider extends ContentProvider {
                 null,
                 sortOrder
         );
-        Log.d(TAG, "getFlightWithCarrier: Data provider : " + mCursor.getCount());
         return mCursor;
     }
 
@@ -290,10 +305,13 @@ public class DataProvider extends ContentProvider {
         matcher.addURI(CONTENT_AUTHORITY, PATH_AIRPORT, AIRPORT);
         matcher.addURI(CONTENT_AUTHORITY, PATH_CARRIER, CARRIER);
         matcher.addURI(CONTENT_AUTHORITY, PATH_COUNTER, COUNTER);
+        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT, FLIGHT);
+
         matcher.addURI(CONTENT_AUTHORITY, PATH_CARRIER + "/*", CARRIER_WITH_AIRPORT);
         matcher.addURI(CONTENT_AUTHORITY, PATH_COUNTER + "/*", COUNTER_WITH_CARRIER);
-        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT, FLIGHT);
-        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT + "/*", FLIGHT_WITH_CARRIER);
+
+        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT + "/" + PATH_CARRIER + "/*", FLIGHT_WITH_CARRIER);
+        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT + "/*", FLIGHT_WITH_ID);
         return matcher;
     }
 }

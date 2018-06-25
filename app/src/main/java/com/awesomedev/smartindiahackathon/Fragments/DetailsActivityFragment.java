@@ -1,17 +1,16 @@
 package com.awesomedev.smartindiahackathon.Fragments;
 
 import android.Manifest;
-import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,17 +21,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.awesomedev.smartindiahackathon.Activities.DetailsActivity;
-import com.awesomedev.smartindiahackathon.Activities.MainActivity;
 import com.awesomedev.smartindiahackathon.Models.Counter;
 import com.awesomedev.smartindiahackathon.Models.Route.Legs;
 import com.awesomedev.smartindiahackathon.Models.Route.OverviewPolyline;
@@ -45,11 +40,9 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -74,7 +67,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.AirportEntry;
 import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.CounterEntry;
 import static com.awesomedev.smartindiahackathon.Data.DatabaseContract.FlightEntry;
 
@@ -97,6 +89,17 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
     @BindString(R.string.KEY_FLIGHT)
     String KEY_FLIGHT;
+
+
+    @BindString(R.string.KEY_AIRPORT_ID)
+    String KEY_AIRPORT_ID;
+
+    @BindString(R.string.KEY_CARRIER_ID)
+    String KEY_CARRIER_ID;
+
+    @BindString(R.string.KEY_FLIGHT_ID)
+    String KEY_FLIGHT_ID;
+
 
     @BindString(R.string.API_KEY)
     String API_KEY;
@@ -138,10 +141,6 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     private int carrier_id, flight_id;
 
 
-    private static final String KEY_AIRPORT_ID = "AIRPORT_ID";
-    private static final String KEY_CARRIER_ID = "CARRIER_ID";
-    private static final String KEY_FLIGHT_ID = "FLIGHT_ID";
-
     private static final int FLIGHT_LOADER_ID = 10;
     private static final int COUNTER_LOADER_ID = 11;
 
@@ -174,7 +173,6 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         bottomSheetBehavior.setPeekHeight(300);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
-        Log.d(TAG, "onCreateView: onCreateFragment Called");
 
         Bundle args = getArguments();
 
@@ -186,6 +184,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         // Get the flight details asynchronously
         this.carrier_id = args.getInt(KEY_CARRIER_ID);
         this.flight_id = args.getInt(KEY_FLIGHT_ID);
+
 
         firebaseDatabase = FirebaseDatabase.getInstance();
         reference = firebaseDatabase.getReference(this.airport + "/" + this.carrier + "/carrier");
@@ -207,7 +206,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                     values.put(CounterEntry.COLUMN_COUNTER_THROUGHPUT, counter.getThroughput());
                     values.put(CounterEntry.COLUMN_COUNTER_COUNT, counter.getCounterCount());
 
-                    getContext().getContentResolver().insert(CounterEntry.CONTENT_URI, values);
+                    getActivity().getApplicationContext().getContentResolver().insert(CounterEntry.CONTENT_URI, values);
                 }
             }
 
@@ -216,7 +215,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
             }
         };
-        reference.addValueEventListener(mListener);
+        reference.addListenerForSingleValueEvent(mListener);
 
         mClient = new GoogleApiClient.Builder(getActivity())
                 .addConnectionCallbacks(this)
@@ -235,20 +234,28 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
             }
         });
 
+        Cursor rCursor = getContext().getContentResolver().query(FlightEntry.CONTENT_URI, null, null, null, null);
+
+        rCursor.moveToFirst();
+        do {
+            int id = rCursor.getInt(rCursor.getColumnIndex(FlightEntry._ID));
+            String flightName = rCursor.getString(rCursor.getColumnIndex(FlightEntry.COLUMN_FLIGHT_NUMBER));
+
+            Log.d(TAG, "onCreateView: flights in db : " + flightName + " " + id);
+        } while (rCursor.moveToNext());
+
         return rootView;
     }
 
 
     @Override
     public void onStart() {
-        Log.d(TAG, "onStart: onStartFragment is called");
         mapView.onStart();
         super.onStart();
     }
 
     @Override
     public void onStop() {
-        Log.d(TAG, "onStop: onStopFragment is called");
         mapView.onStop();
         mClient.disconnect();
         super.onStop();
@@ -256,21 +263,18 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
     @Override
     public void onPause() {
-        Log.d(TAG, "onPause: onPauseFragment is called");
         mapView.onPause();
         super.onPause();
     }
 
     @Override
     public void onResume() {
-        Log.d(TAG, "onResume: onResumeFragment is called");
         mapView.onResume();
         super.onResume();
     }
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "onDestroy: onDestroyFragment is called");
         mapView.onDestroy();
         super.onDestroy();
     }
@@ -283,14 +287,12 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        Log.d(TAG, "onSaveInstanceState: onSaveInstanceStateFragment is called");
         mapView.onSaveInstanceState(outState);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onDestroyView() {
-        Log.d(TAG, "onDestroyView: onDestroyViewFragment is called");
         super.onDestroyView();
     }
 
@@ -323,7 +325,6 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG, "onConnected: onClientConnected Called");
         // Play services connected , now proceed with the flow
 
         // Load the data from the backend
@@ -352,7 +353,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
     private void updateDetailsView(Cursor data) {
         data.moveToFirst();
-        tvAirport.setText(data.getString(data.getColumnIndex(AirportEntry.COLUMN_AIRPORT_NAME)));
+        tvAirport.setText(this.airport);
         tvFlightNumber.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_FLIGHT_NUMBER)));
 
         tvSource.setText(data.getString(data.getColumnIndex(FlightEntry.COLUMN_SOURCE)));
@@ -439,8 +440,6 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
 
                         @Override
                         public void onFailure(Call<RouteDirections> call, Throwable t) {
-                            Log.d(TAG, "onFailure: " + call.request().url().toString());
-                            Log.d(TAG, "onFailure: " + t.getMessage());
                         }
                     });
                 }
@@ -481,8 +480,10 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (id == FLIGHT_LOADER_ID) {
+            Uri uri = FlightEntry.getFlightUri(flight_id);
+
             return new CursorLoader(getActivity(),
-                    FlightEntry.getFlightUri(carrier_id),
+                    FlightEntry.getFlightUri(flight_id),
                     null,
                     null,
                     null,
@@ -515,7 +516,6 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                 float avg_waiting_time = Float.parseFloat(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME)));
                 int number_of_people = Integer.parseInt(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_COUNT)));
                 int counter_number = Integer.parseInt(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_NUMBER)));
-                Log.d(TAG, "onLoadFinished: " + Integer.toString(counter_number));
                 tvEstimate.setText(String.format("%f hours", (base_num_mins + (avg_waiting_time * number_of_people)) / 60));
             }
         }

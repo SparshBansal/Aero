@@ -3,6 +3,10 @@ package com.awesomedev.smartindiahackathon.Data;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.provider.ContactsContract;
+import android.util.Log;
+
+import com.awesomedev.smartindiahackathon.Activities.DetailsActivity;
 
 /**
  * Created by sparsh on 3/31/17.
@@ -17,6 +21,8 @@ public class DatabaseContract {
     public static final String PATH_CARRIER = "carrier";
     public static final String PATH_COUNTER = "counter";
     public static final String PATH_FLIGHT = "flight";
+
+    public static final String TAG= DatabaseContract.class.getSimpleName();
 
     public static final class AirportEntry implements BaseColumns{
 
@@ -53,8 +59,10 @@ public class DatabaseContract {
         // Column for storing the name of the carrier
         public static final String COLUMN_CARRIER_NAME = "carrier_name";
 
-        public static Uri buildCarrierUri(long airport_id){
-            return ContentUris.withAppendedId(CONTENT_URI,airport_id);
+        public static Uri buildCarrierWithAirportUri(long airport_id){
+            Uri returnUri = ContentUris.withAppendedId(CONTENT_URI, airport_id);
+            Log.d(TAG, "buildCarrierWithAirportUri: " + returnUri.toString());
+            return returnUri;
         }
 
     }
@@ -124,8 +132,14 @@ public class DatabaseContract {
         // Column for storing counter throughput
         public static final String COLUMN_SOURCE= "source";
 
-        public static Uri getFlightUri(int carrier_id){
-            return ContentUris.withAppendedId(CONTENT_URI,carrier_id);
+        public static Uri getFlightWithCarrierUri ( int carrier_id){
+            Uri.Builder builder = CONTENT_URI.buildUpon();
+            Uri returnUri = builder.appendPath(PATH_CARRIER).build();
+            return ContentUris.withAppendedId(returnUri, carrier_id);
+        }
+
+        public static Uri getFlightUri(int flight_id){
+            return ContentUris.withAppendedId(CONTENT_URI, flight_id);
         }
     }
 
