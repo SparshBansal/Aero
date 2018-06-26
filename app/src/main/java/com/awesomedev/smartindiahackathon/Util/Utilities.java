@@ -74,6 +74,24 @@ public class Utilities {
         return response;
     }
 
+    public static String getFriendlyTimeString ( float minutes ){
+
+        int mins = (int) minutes;
+
+        int hours = mins/60;
+
+        String friendlyString = "";
+
+        if ( hours != 0 )
+            friendlyString = friendlyString.concat(String.format("%d Hours , ", hours));
+
+        int remMins = mins%60;
+
+        if ( remMins != 0)
+            friendlyString = friendlyString.concat(String.format("%02d Minutes", remMins));
+
+        return friendlyString;
+    }
 
     public static List<LatLng> decodePoly(String encoded) {
 

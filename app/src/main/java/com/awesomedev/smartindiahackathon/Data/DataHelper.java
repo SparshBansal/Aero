@@ -41,10 +41,10 @@ public class DataHelper extends SQLiteOpenHelper{
         final String CREATE_COUNTER_TABLE_COMMAND = "CREATE TABLE " + CounterEntry.TABLE_NAME +
                 " (" + CounterEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT , " +
                 CounterEntry.COLUMN_CARRIER_KEY + " INTEGER , " +
-                CounterEntry.COLUMN_COUNTER_NUMBER + " TEXT , " +
-                CounterEntry.COLUMN_COUNTER_COUNT + " TEXT , " +
-                CounterEntry.COLUMN_COUNTER_THROUGHPUT + " TEXT , " +
-                CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME + " TEXT, "+
+                CounterEntry.COLUMN_COUNTER_NUMBER + " INTEGER , " +
+                CounterEntry.COLUMN_COUNTER_COUNT + "  INTEGER , " +
+                CounterEntry.COLUMN_COUNTER_THROUGHPUT + " REAL , " +
+                CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME + " REAL , "+
 
                 "FOREIGN KEY (" + CounterEntry.COLUMN_CARRIER_KEY + " ) " +
                 "REFERENCES " + CarrierEntry.TABLE_NAME + "(" + CarrierEntry._ID +")," +

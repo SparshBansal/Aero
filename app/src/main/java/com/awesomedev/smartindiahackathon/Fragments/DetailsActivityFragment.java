@@ -414,9 +414,14 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                             Routes shortestRoute = routes.get(0);
                             Legs firstLeg = shortestRoute.getLegs().get(0);
 
-                            float estimatedTime = firstLeg.getDuration().getValue();
+                            float travelTime = 0;
+                            for ( Legs leg : shortestRoute.getLegs() ){
+                                travelTime += leg.getDuration().getValue();
+                            }
 
-                            base_num_mins = base_num_mins + estimatedTime + 45;
+                            // convert travel time to minutes
+                            travelTime /= 60;
+                            base_num_mins = travelTime;
 
                             // Plot the polyline on the map
                             OverviewPolyline overviewPolyline = shortestRoute.getOverviewPolyline();
@@ -497,7 +502,7 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
                     null,
                     null,
                     null,
-                    CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME + " ASC"
+                    CounterEntry.COLUMN_COUNTER_THROUGHPUT+ " DESC"
             );
         }
         return null;
@@ -513,10 +518,15 @@ public class DetailsActivityFragment extends Fragment implements ActivityCompat.
         if (loader.getId() == COUNTER_LOADER_ID) {
             if (this.isAdded()) {
                 data.moveToFirst();
-                float avg_waiting_time = Float.parseFloat(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_AVG_WAITING_TIME)));
-                int number_of_people = Integer.parseInt(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_COUNT)));
-                int counter_number = Integer.parseInt(data.getString(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_NUMBER)));
-                tvEstimate.setText(String.format("%f hours", (base_num_mins + (avg_waiting_time * number_of_people)) / 60));
+                float throughput = data.getFloat(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_THROUGHPUT));
+                int number_of_people = data.getInt(data.getColumnIndex(CounterEntry.COLUMN_COUNTER_COUNT));
+
+                Log.d(TAG, "onLoadFinished: " + throughput);
+                float avg_waiting_time = (throughput * number_of_people)/60;
+                float totalEstimatesMinutes = base_num_mins + avg_waiting_time;
+                String friendlyEstimatedTimeString = Utilities.getFriendlyTimeString ( totalEstimatesMinutes );
+
+                tvEstimate.setText(friendlyEstimatedTimeString);
             }
         }
     }

@@ -16,6 +16,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -63,6 +64,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @BindView(R.id.sv_flight)
     Spinner svFlight;
+
+    @BindView(R.id.pb_data_fetch_progress)
+    ProgressBar pbDataFetch;
 
     @BindString(R.string.KEY_AIRPORT)
     String KEY_AIRPORT;
@@ -197,6 +201,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
+        pbDataFetch.setVisibility(View.VISIBLE);
 
         getSupportLoaderManager().restartLoader(AIRPORT_LOADER_ID, null, this);
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -277,12 +282,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     }
                 }
+
+                pbDataFetch.setVisibility(View.INVISIBLE);
                 getSupportLoaderManager().restartLoader(AIRPORT_LOADER_ID, null, MainActivity.this);
+
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                pbDataFetch.setVisibility(View.INVISIBLE);
             }
         });
     }
@@ -353,8 +361,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             final int carrier_id = args.getInt(KEY_CARRIER_ID);
             Uri uri = FlightEntry.getFlightWithCarrierUri(carrier_id);
 
-            int matcher = buildUriMatcher().match(uri);
-
             return new CursorLoader(this,
                     uri,
                     null,
@@ -388,22 +394,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             this.airportCursor = null;
             airportAdapter.notifyDataSetChanged();
         }
-    }
-
-
-    private UriMatcher buildUriMatcher() {
-        UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
-
-        matcher.addURI(CONTENT_AUTHORITY, PATH_AIRPORT, AIRPORT);
-        matcher.addURI(CONTENT_AUTHORITY, PATH_CARRIER, CARRIER);
-        matcher.addURI(CONTENT_AUTHORITY, PATH_COUNTER, COUNTER);
-        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT, FLIGHT);
-
-        matcher.addURI(CONTENT_AUTHORITY, PATH_CARRIER + "/*", CARRIER_WITH_AIRPORT);
-        matcher.addURI(CONTENT_AUTHORITY, PATH_COUNTER + "/*", COUNTER_WITH_CARRIER);
-
-        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT + "/" + PATH_CARRIER + "/*", FLIGHT_WITH_CARRIER);
-        matcher.addURI(CONTENT_AUTHORITY, PATH_FLIGHT + "/*", FLIGHT_WITH_ID);
-        return matcher;
     }
 }
